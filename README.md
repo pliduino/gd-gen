@@ -111,7 +111,7 @@ This project is under active development. Contributions and feedback are welcome
 
 ## 📄 License
 
-ModifiedMIT License. See [LICENSE](./LICENSE) for more details.
+Modified MIT License. See [LICENSE](./LICENSE) for more details.
 
 ---
 
