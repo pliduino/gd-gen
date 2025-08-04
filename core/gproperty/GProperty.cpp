@@ -149,6 +149,52 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
                 exit(1);
             }
         }
+        else if (token.value == "ShowIf")
+        {
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::LeftParenthesis)
+            {
+                std::cerr << "ShowIf expected left parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            std::string condition;
+
+            bool at_least_one = false;
+
+            // Converts tokens between parenthesis to string
+            while (tokens.front().token != GToken::RightParenthesis)
+            {
+                at_least_one = true;
+                condition += tokens.front().value;
+                tokens.pop();
+                if (tokens.empty())
+                {
+                    std::cerr << "ShowIf expected right parenthesis" << "'\n";
+                    exit(1);
+                }
+            }
+
+            if (!at_least_one)
+            {
+                std::cerr << "ShowIf expected at least one token inside parenthesis" << "'\n";
+                exit(1);
+            }
+
+            show_if = condition;
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::RightParenthesis)
+            {
+                std::cerr << "ShowIf expected right parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+        }
 
         not_first = true;
     }

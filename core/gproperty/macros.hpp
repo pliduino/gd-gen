@@ -17,7 +17,10 @@ constexpr bool is_valid_gproperty_flag(const char *flag)
         if (str_equal(flag, valid_flags[i]))
             return true;
     }
-    if (starts_with(flag, "Description("))
+    if (starts_with(flag, "Description(")) // TODO: Validate string
+        return true;
+
+    if (starts_with(flag, "ShowIf(")) // TODO: Validate statement
         return true;
 
     return false;

@@ -13,6 +13,7 @@ struct GPropertyOptions
     bool noStorage = false;
     bool multiline_text = false;
     std::string description;
+    std::string show_if;
 
     GPropertyOptions() {}
 
