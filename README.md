@@ -109,6 +109,12 @@ This project is under active development. Contributions and feedback are welcome
 
 ---
 
+## 📄 License
+
+ModifiedMIT License. See [LICENSE](./LICENSE) for more details.
+
+---
+
 ## 💬 Contact
 
 Questions or ideas? Open an issue or contact [pliduino](https://github.com/pliduino).
