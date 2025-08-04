@@ -32,6 +32,6 @@ constexpr bool is_valid_gsignal_signature(const char *signature)
 
 #define VALIDATE_EACH_GSIGNAL_FLAG(...) FOR_EACH(CHECK_GSIGNAL_FLAG, SEMICOLON_END, __VA_ARGS__);
 
-#define GSIGNAL(signature, ...)                                                       \
-    static_assert(is_valid_gsignal_signature(signature), "Invalid GSIGNAL signature") \
-        VALIDATE_EACH_GSIGNAL_FLAG(__VA_ARGS__)\
+#define GSIGNAL(signature, ...)                                                        \
+    static_assert(is_valid_gsignal_signature(#signature), "Invalid GSIGNAL signature") \
+        VALIDATE_EACH_GSIGNAL_FLAG(__VA_ARGS__)

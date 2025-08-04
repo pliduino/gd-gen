@@ -440,21 +440,21 @@ public:
                     }
                     core_functions += ");\\\n}\\\n";
 
-                    core_functions += "/// " + signal.name + "(";
-                    once = true;
-                    for (auto &argument : signal.arguments)
-                    {
-                        if (once)
-                        {
-                            core_functions += argument.raw_type + " " + argument.name;
-                            once = false;
-                        }
-                        else
-                        {
-                            core_functions += ", " + argument.raw_type + " " + argument.name;
-                        }
-                    }
-                    core_functions += ")\n";
+                    // core_functions += "/// " + signal.name + "(";
+                    // once = true;
+                    // for (auto &argument : signal.arguments)
+                    // {
+                    //     if (once)
+                    //     {
+                    //         core_functions += argument.raw_type + " " + argument.name;
+                    //         once = false;
+                    //     }
+                    //     else
+                    //     {
+                    //         core_functions += ", " + argument.raw_type + " " + argument.name;
+                    //     }
+                    // }
+                    // core_functions += ")\n";
 
                     core_functions += "void connect_" + signal.name + "(Callable callable){\\\n\tconnect(\"" + signal.name + "\", callable);\\\n}\\\n";
                 }
