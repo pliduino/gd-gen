@@ -31,7 +31,7 @@ std::string treatPropertyType(std::string str)
     return str;
 }
 
-const char *type_to_variant(GType type)
+const std::string type_to_variant(GType type)
 {
     switch (type)
     {
@@ -239,25 +239,16 @@ class Generator
         GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
     }
 
-    void generate_property_bindings(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class, std::string accessor = "")
+    std::string generate_property_hints(GProperty &property)
     {
-        const auto &struct_ = structs.find(property.rawType);
-        if (struct_ != structs.end())
-        {
-            for (auto struct_property : struct_->second.properties)
-            {
-                generate_property_bindings(struct_property, GeneratedFile, _class, accessor + property.name + ".");
-            }
-            return;
-        }
-
         std::string hints = "PROPERTY_HINT_NONE, \"";
-        std::string usage = "PROPERTY_USAGE_DEFAULT";
 
         const auto &enum_ = enums.find(property.rawType);
         if (enum_ != enums.end())
         {
             property.variantType = GType::Enum;
+
+            // TODO: move this to switch case below
             hints = "PROPERTY_HINT_ENUM, \"";
 
             for (auto &enum_value : enum_->second.values)
@@ -292,28 +283,126 @@ class Generator
             }
         }
 
-        const auto final_property_name = sanitize_accessor_to_identifier(accessor) + property.name;
-        const auto final_property_accessor = sanitize_accessor_to_extra(accessor) + property.name;
+        return hints;
+    }
+
+    std::string generate_property_usage(GProperty &property)
+    {
+        std::string usage = "";
+        bool any = false;
 
         if (property.options.noStorage)
         {
-            usage = "PROPERTY_USAGE_NO_EDITOR";
+            if (any)
+            {
+                usage += "|";
+            }
+            usage += "PROPERTY_USAGE_NO_EDITOR";
+            any = true;
         }
-        else if (property.options.hideInInspector)
+        if (property.options.hideInInspector)
         {
+            if (any)
+            {
+                usage += "|";
+            }
             usage = "PROPERTY_USAGE_STORAGE";
+            any = true;
         }
+
+        if (!any)
+        {
+            usage = "PROPERTY_USAGE_DEFAULT";
+        }
+
+        return usage;
+    }
+
+    void generate_property_bindings(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class, std::string accessor = "")
+    {
+        const auto &struct_ = structs.find(property.rawType);
+
+        /// Structs are added as subproperties
+        if (struct_ != structs.end())
+        {
+            for (auto struct_property : struct_->second.properties)
+            {
+                generate_property_bindings(struct_property, GeneratedFile, _class, accessor + property.name + ".");
+            }
+            return;
+        }
+
+        const auto final_property_name = sanitize_accessor_to_identifier(accessor) + property.name;
+        const auto final_property_accessor = sanitize_accessor_to_extra(accessor) + property.name;
 
         GeneratedFile << "ClassDB::bind_method(D_METHOD(\"get_" << final_property_name << "\"), &" << _class.name << "::generated_get_" << final_property_name << ");\\\n"
-                      << "ClassDB::bind_method(D_METHOD(\"set_" << final_property_name << "\", \"value\"), &" << _class.name << "::generated_set_" << final_property_name << ");\\\n"
-                      << "ADD_PROPERTY(PropertyInfo(Variant::" << type_to_variant(property.variantType) << ", \"" << final_property_accessor << "\", " << hints;
+                      << "ClassDB::bind_method(D_METHOD(\"set_" << final_property_name << "\", \"value\"), &" << _class.name << "::generated_set_" << final_property_name << ");\\\n";
 
-        // if (!property.options.description.empty())
-        // {
-        //     GeneratedFile << ";" << property.options.description;
-        // }
+        // If show_if is set property will be added to property list manually
+        if (property.options.show_if.empty())
+        {
+            std::string property_info = generate_property_info(property);
+            GeneratedFile
+                << "ADD_PROPERTY(" << property_info << ", \"set_" << final_property_name << "\", \"get_" << final_property_name << "\");\\\n";
+        }
+    }
 
-        GeneratedFile << "\", " << usage << "), \"set_" << final_property_name << "\", \"get_" << final_property_name << "\");\\\n";
+    std::string generate_property_info(GProperty &property)
+    {
+        std::string hints = generate_property_hints(property);
+        std::string usage = generate_property_usage(property);
+
+        std::string variant = type_to_variant(property.variantType);
+
+        return "PropertyInfo(Variant::" + variant + ", \"" + property.name + "\", " + hints + "\", " + usage + ")";
+    }
+
+    void generate_custom_property_list(std::ofstream &GeneratedFile, GClass &_class)
+    {
+        std::string get_override = "";
+        std::string set_override = "";
+
+        GeneratedFile << "void " << "_get_property_list(List<PropertyInfo> *p_list) {\\\n\t";
+
+        for (GProperty &property : _class.properties)
+        {
+            if (property.options.show_if.empty())
+            {
+                continue;
+            }
+
+            GeneratedFile << "if (" << property.options.show_if << ") {\\\n";
+            generate_property_list_entry(property, GeneratedFile, _class);
+            GeneratedFile << "\t}\\\n";
+
+            get_override += "if (p_name == String(\"" + property.name + "\")) {\\\n";
+            get_override += "\tr_ret = generated_get_" + property.name + "();\\\n";
+            get_override += "\treturn true;\\\n";
+            get_override += "}\\\n";
+
+            set_override += "if (p_name == String(\"" + property.name + "\")) {\\\n";
+            set_override += "\tgenerated_set_" + property.name + "(p_value);\\\n";
+            set_override += "\treturn true;\\\n";
+            set_override += "}\\\n";
+        }
+
+        GeneratedFile << "};\\\n";
+
+        GeneratedFile << "bool _get(const StringName &p_name, Variant &r_ret) const {\\\n";
+        GeneratedFile << get_override;
+        GeneratedFile << "\treturn false;\\\n";
+        GeneratedFile << "}\\\n";
+
+        GeneratedFile << "bool _set(const StringName &p_name, const Variant &p_value) {\\\n";
+        GeneratedFile << set_override;
+        GeneratedFile << "\treturn false;\\\n";
+        GeneratedFile << "}\\\n";
+    }
+
+    void generate_property_list_entry(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class)
+    {
+        std::string property_info = generate_property_info(property);
+        GeneratedFile << "p_list->push_back(" << property_info << ");\\\n";
     }
 
 public:
@@ -403,6 +492,8 @@ public:
                 {
                     generate_property_getset(property, GeneratedFile, core_functions, requirements, _class);
                 }
+
+                generate_custom_property_list(GeneratedFile, _class);
 
                 for (auto signal : _class.signals)
                 {
