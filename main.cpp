@@ -353,14 +353,20 @@ class Generator
         const auto final_property_name = sanitize_accessor_to_identifier(accessor) + property.name;
         const auto final_property_accessor = sanitize_accessor_to_extra(accessor) + property.name;
 
-        GeneratedFile << "ClassDB::bind_method(D_METHOD(\"get_" << final_property_name << "\"), &" << _class.name << "::generated_get_" << final_property_name << ");\\\n"
-                      << "ClassDB::bind_method(D_METHOD(\"set_" << final_property_name << "\", \"value\"), &" << _class.name << "::generated_set_" << final_property_name << ");\\\n";
+        if (property.options.custom_getter.empty())
+        {
+            GeneratedFile << "ClassDB::bind_method(D_METHOD(\"get_" << final_property_name << "\"), &" << _class.name << "::generated_get_" << final_property_name << ");\\\n";
+        }
+        if (property.options.custom_setter.empty())
+        {
+            GeneratedFile << "ClassDB::bind_method(D_METHOD(\"set_" << final_property_name << "\", \"value\"), &" << _class.name << "::generated_set_" << final_property_name << ");\\\n";
+        }
 
         // If show_if is set property will be added to property list manually
         if (property.options.show_if.empty())
         {
             std::string property_info = generate_property_info(property);
-            GeneratedFile << "ADD_PROPERTY(" << property_info << ", \" ";
+            GeneratedFile << "ADD_PROPERTY(" << property_info << ", \"";
 
             if (property.options.custom_setter.empty())
             {
