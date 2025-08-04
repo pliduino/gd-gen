@@ -87,7 +87,7 @@ All you need to do is remember to add the proper GCLASS/GPROPERTY/GENUM/GSIGNAL/
 
 ## 📚 Documentation
 
-[DOCUMENTATION](./DOCUMENTATION)
+[DOCUMENTATION](./DOCUMENTATION.md)
 
 ---
 
