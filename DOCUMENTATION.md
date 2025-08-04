@@ -15,17 +15,22 @@ Registers a class with Godot.
 Registers a property inside the class.
 
 **Modifiers:**
-- `Required` — Displays a warning if the property is unset in the inspector.
-- `NoStorage` — Prevents the property from being serialized.
-- `HideInInspector` — Hides the property from the inspector.
-- `MultilineText` — Shows the property as a multiline text box.
-- `ShowIf(condition)` — Only shows the property if the given condition evaluates to true.
+- `**Required**` — Displays a warning if the property is unset in the inspector.
+- `**NoStorage**` — Prevents the property from being serialized.
+- `**HideInInspector**` — Hides the property from the inspector.
+- `**MultilineText**` — Shows the property as a multiline text box.
+- `**ShowIf(condition)**` — Only shows the property if the given condition evaluates to true.
+- `**Getter(getter)**` — Uses the specified method name as the property's getter.
+- `**Setter(setter)**` — Uses the specified method name as the property's setter.
+
+> ⚠️ **Note:** The methods used in `Getter` and `Setter` must be registered using `GFUNCTION(...)`,
+> or manually bound using `ClassDB::bind_method`, otherwise the property binding **will not work**.
 
 ---
 
 ### 🟡 `GENUM()`
 
-Registers an enum.  
+Registers an enum.
 If you're using an enum inside a `GPROPERTY()`, make sure to register it first with `GENUM()`.
 
 ---
