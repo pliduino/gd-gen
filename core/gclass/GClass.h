@@ -1,0 +1,33 @@
+#pragma once
+
+#include <iostream>
+
+#include <parser/parser.h>
+#include <core/gproperty/GProperty.h>
+#include <core/gsignal/GSignal.h>
+#include <core/gfunction/GFunction.h>
+
+struct GClassOptions
+{
+    bool is_resource = false;
+    bool custom_bindings = false;
+
+    GClassOptions() {}
+
+    GClassOptions(std::queue<TokenValue> &tokens);
+};
+
+struct GClass
+{
+    std::string name;
+    std::string parentName;
+    std::filesystem::path path;
+    std::vector<GSignal> signals;
+    std::vector<GProperty> properties;
+    std::vector<GFunction> functions;
+    unsigned int generator_line;
+    GClassOptions options;
+
+    GClass() {}
+    GClass(std::queue<TokenValue> &tokens);
+};
