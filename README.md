@@ -1,0 +1,110 @@
+# GD-Gen
+
+**Auto-generate C++ code for Godot, like Unreal Engine 5 (UE5) does — but for Godot.**
+
+`gd-gen` is a code generation tool for Godot's C++ GDExtension system. It helps streamline development by generating boilerplate code for properties, signals, and other common patterns, similar to how UE5 handles reflection and metadata.
+
+---
+
+## ✨ Features
+
+- ✅ Automatic generation of C++ boilerplate for Godot
+- ✅ Similar to UE5's reflection system, but adapted for Godot
+- ✅ Reduces manual code and improves consistency
+- ✅ Integrates cleanly with Godot's GDExtension workflow
+
+---
+
+## 🚀 Getting Started
+
+1. **Install**  
+   Clone this repository or add it as a submodule to your Godot C++ project.
+
+   ```bash
+   git clone https://github.com/yourname/gd-gen.git
+   ```
+
+2. **Run Generator**
+   ```bash
+   ./gd-gen path/to/your/source/files
+   ```
+
+3. **Generated Output**
+   - Boilerplate headers and source files are generated automatically.
+   - Naming, property registration, and signal declarations handled for you.
+
+---
+
+## 📦 Example
+
+Before:
+
+```cpp
+class MyNode : public godot::Node {
+    GDCLASS(MyNode, godot::Node)
+
+public:
+    int health;
+};
+```
+
+After `gd-gen`:
+
+```cpp
+GCLASS()
+class MyNode : public godot::Node {
+    GENERATED_BODY()
+
+public:
+    GPROPERTY()
+    int health;
+
+    GSIGNAL(health_changed(int new_health))
+};
+```
+
+Generated code:
+
+```cpp
+void emit_health_changed();
+void connect_health_changed(Callable callable);
+
+void MyNode::_bind_methods() {
+    godot::ClassDB::bind_method(D_METHOD("get_health"), &MyNode::get_health);
+    godot::ClassDB::bind_method(D_METHOD("set_health", "value"), &MyNode::set_health);
+    ADD_PROPERTY(PropertyInfo(Variant::INT, "health", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT), "set_health", "get_health");
+    ADD_SIGNAL(MethodInfo("health_changed", PropertyInfo(Variant::INT, "new_health")));
+}
+```
+
+All you need to do is remember to add the proper GCLASS/GPROPERTY/GENUM/GSIGNAL/GFUNCTION anotations, add GENERATED_BODY() to the top of the class and include <generated/MYCLASS.generated.h> as your last include. Also there's a generated register_types macro that has a GENERATED_TYPES() macro, remember to use it inside "initialize_xxx_module" to automatically register classes.
+
+---
+
+## 📚 Documentation
+
+IN PROGRESS
+
+For now I'll just dump info here:
+
+GCLASS(Resource, CustomBindings) - Register classes, "Resource" force registers it as a resource if the generator misses it (it shouldn't, if it does report it as a bug), "CustomBindings" allows you to set a function "custom_bind_methods" that gives you access to the original bind_methods()
+
+GPROPERTY(Required, NoStorage, HideInInspector, MultilineText) - Register properties inside classes, "Required" gives a warning if the proeprty is not set in the inspector, "NoStorage" blocks serializing, "HideInInspector" well, hides in inspector, and "MultilineText" does what it says.
+
+GENUM() - Just registers enums, if you're using an enum as GPROPERTY() remember to register it first
+
+GFUNCTION() - Exposes functions
+
+GSIGNAL(MySignal(int value, float value2) - Registers signals and generates "emit_MySignal" and "connect_MySignal" functions.
+
+---
+
+## 🧪 Development Status
+
+This project is under active development. Contributions and feedback are welcome!
+
+---
+
+## 💬 Contact
+
+Questions or ideas? Open an issue or contact [pliduino](https://github.com/pliduino).
