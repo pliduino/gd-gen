@@ -87,21 +87,7 @@ All you need to do is remember to add the proper GCLASS/GPROPERTY/GENUM/GSIGNAL/
 
 ## 📚 Documentation
 
-IN PROGRESS
-
-For now I'll just dump info here:
-
-GCLASS(Resource, CustomBindings) - Register classes, "Resource" force registers it as a resource if the generator misses it (it shouldn't, if it does report it as a bug), "CustomBindings" allows you to set a function "custom_bind_methods" that gives you access to the original bind_methods()
-
-GPROPERTY(Required, NoStorage, HideInInspector, MultilineText) - Register properties inside classes, "Required" gives a warning if the proeprty is not set in the inspector, "NoStorage" blocks serializing, "HideInInspector" well, hides in inspector, and "MultilineText" does what it says.
-
-ShowIf(condition) - Shows property in inspecor only if condition is true
-
-GENUM() - Just registers enums, if you're using an enum as GPROPERTY() remember to register it first
-
-GFUNCTION() - Exposes functions
-
-GSIGNAL(MySignal(int value, float value2) - Registers signals and generates "emit_MySignal" and "connect_MySignal" functions.
+[DOCUMENTATION](./DOCUMENTATION)
 
 ---
 
