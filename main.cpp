@@ -299,6 +299,33 @@ class Generator
             {
                 hints = "PROPERTY_HINT_MULTILINE_TEXT, \"";
             }
+            break;
+        case GType::Float:
+            if (property.options.hint_range_enabled)
+            {
+                hints = "PROPERTY_HINT_RANGE, \"" + std::to_string(property.options.hint_range.min) +
+                        "," + std::to_string(property.options.hint_range.max);
+
+                if (property.options.hint_range.step != 0.0)
+                {
+                    hints += "," + std::to_string(property.options.hint_range.step);
+                }
+            }
+            break;
+        case GType::Int:
+            if (property.options.hint_range_enabled)
+            {
+                hints = "PROPERTY_HINT_RANGE, \"" + std::to_string(static_cast<int>(property.options.hint_range.min)) +
+                        "," + std::to_string(static_cast<int>(property.options.hint_range.max));
+
+                if (property.options.hint_range.step != 0.0)
+                {
+                    hints += "," + std::to_string(static_cast<int>(property.options.hint_range.step));
+                }
+            }
+            break;
+        default:
+            break;
         }
 
         return hints;

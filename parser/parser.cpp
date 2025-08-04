@@ -17,6 +17,7 @@ enum class SpecialChars
     Asterisk,
     Comma,
     Slash,
+    Period,
     Colon,
     Equal
 };
@@ -71,7 +72,7 @@ const SpecialChars special_chars[255] = {
     SpecialChars::Empty,            // 43: '+' (Plus)
     SpecialChars::Comma,            // 44: ',' (Comma)
     SpecialChars::Empty,            // 45: '-' (Hyphen)
-    SpecialChars::Empty,            // 46: '.' (Period)
+    SpecialChars::Period,           // 46: '.' (Period)
     SpecialChars::Slash,            // 47: '/' (Slash)
     SpecialChars::Digit,            // 48: '0' (Digit zero)
     SpecialChars::Digit,            // 49: '1' (Digit one)
@@ -374,12 +375,23 @@ inline TokenValue Parser::read_identifier()
 inline TokenValue Parser::read_number()
 {
     std::string str;
+    GToken token_type = GToken::Integer;
     char c;
     while (file.get(c))
     {
         if (special_chars[c] == SpecialChars::Digit)
         {
             str.push_back(c);
+        }
+        else if (special_chars[c] == SpecialChars::Period)
+        {
+            token_type = GToken::Float;
+            str.push_back(c);
+        }
+        else if (c == 'f')
+        {
+            token_type = GToken::Float;
+            break;
         }
         else
         {
@@ -389,7 +401,7 @@ inline TokenValue Parser::read_number()
     }
 
     return TokenValue{
-        GToken::Number,
+        token_type,
         str,
         cur_line,
     };
@@ -507,6 +519,8 @@ std::string GTokenToString(GToken token)
         return "Pointer";
     case GToken::LeftParenthesis:
         return "LeftParenthesis";
+    case GToken::Float:
+        return "Float";
     case GToken::RightParenthesis:
         return "RightParenthesis";
     case GToken::LeftCurlyBrace:
@@ -529,7 +543,7 @@ std::string GTokenToString(GToken token)
         return "Private";
     case GToken::Protected:
         return "Protected";
-    case GToken::Number:
+    case GToken::Integer:
         return "Number";
     case GToken::Equal:
         return "Equal";

@@ -121,9 +121,9 @@ GEnum::GEnum(std::queue<TokenValue> &tokens)
             tokens.pop();
             token = tokens.front();
 
-            if (token.token != GToken::Number)
+            if (token.token != GToken::Integer)
             {
-                std::cerr << "GEnum expected a number\n";
+                std::cerr << "GEnum expected an integer\n";
             }
             enumValue.value = std::stoi(token.value);
             tokens.pop();

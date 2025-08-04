@@ -257,6 +257,76 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
                 exit(1);
             }
         }
+        else if (token.value == "HintRange")
+        {
+            hint_range_enabled = true;
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::LeftParenthesis)
+            {
+                std::cerr << "HintRange expected left parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::Float && token.token != GToken::Integer)
+            {
+                std::cerr << "HintRange expected a number for minimum, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            hint_range.min = std::stof(token.value);
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::Comma)
+            {
+                std::cerr << "HintRange expected comma, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::Float && token.token != GToken::Integer)
+            {
+                std::cerr << "HintRange expected a number for maximum, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            hint_range.max = std::stof(token.value);
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token == GToken::Comma)
+            {
+                token = tokens.front();
+                tokens.pop();
+
+                if (token.token != GToken::Float && token.token != GToken::Integer)
+                {
+                    std::cerr << "HintRange expected a number for step, got '" << token.value << "'\n";
+                    exit(1);
+                }
+
+                hint_range.step = std::stof(token.value);
+
+                token = tokens.front();
+                tokens.pop();
+            }
+
+            if (token.token != GToken::RightParenthesis)
+            {
+                std::cerr << "HintRange expected right parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+        }
         else
         {
             std::cerr << "Unknown flag, got '" << token.value << "'\n";
