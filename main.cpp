@@ -61,8 +61,6 @@ const std::string type_to_variant(GType type)
     }
 }
 
-constexpr char srcFolder[] = "./src";
-
 void dumpPropertiesGetSetDef(std::ofstream &output, const std::vector<GProperty> &properties)
 {
     output << "public:\n";
@@ -73,13 +71,13 @@ void dumpPropertiesGetSetDef(std::ofstream &output, const std::vector<GProperty>
     }
 }
 
-void generate_register_types(std::vector<GClass> classes)
+void generate_register_types(std::vector<GClass> classes, std::filesystem::path srcFolder)
 {
     std::ofstream GeneratedFile("./generated/register_types.generated.h");
 
     for (auto &class_ : classes)
     {
-        GeneratedFile << "#include <" << class_.path.string().substr(sizeof(srcFolder)) << ">\n";
+        GeneratedFile << "#include <" << class_.path.string().substr(srcFolder.string().size()) << ">\n";
     }
 
     GeneratedFile << "\n#define GENERATED_TYPES() ";
@@ -95,16 +93,17 @@ void generate_register_types(std::vector<GClass> classes)
 }
 
 void appendPaths(
-    std::vector<std::filesystem::path> &srcFiles, std::filesystem::path path)
+    std::vector<std::filesystem::path> &srcFiles, std::filesystem::path path, std::filesystem::path &gen_folder,
+    std::filesystem::path srcFolder)
 {
     for (const auto &entry : std::filesystem::directory_iterator(path))
     {
         if (entry.is_directory())
         {
-            std::filesystem::create_directory("./generated/" + entry.path().string().substr(sizeof(srcFolder)));
-            appendPaths(srcFiles, entry.path());
+            std::filesystem::create_directory(gen_folder / entry.path().string().substr(srcFolder.string().size() + 1));
+            appendPaths(srcFiles, entry.path(), gen_folder, srcFolder);
         }
-        else if (entry.path().extension() == ".h" && entry.path().filename() != "register_types.h")
+        else if ((entry.path().extension() == ".h" || entry.path().extension() == ".hpp") && entry.path().filename() != "register_types.h")
         {
             srcFiles.push_back(entry.path());
         }
@@ -406,12 +405,16 @@ class Generator
     }
 
 public:
-    void generate()
+    void generate(std::filesystem::path srcFolder)
     {
-        std::filesystem::create_directory("./generated/");
+        auto genFolder = srcFolder.parent_path() / "generated";
+        std::filesystem::create_directory(genFolder);
+        std::cout << "Generated folder: " << genFolder << std::endl;
+
         std::vector<std::filesystem::path> srcFiles;
 
-        appendPaths(srcFiles, srcFolder);
+        /// Collect all source files and generates generated folder structure
+        appendPaths(srcFiles, srcFolder, genFolder, srcFolder);
 
         for (auto &file : srcFiles)
         {
@@ -469,7 +472,8 @@ public:
         {
             std::string requirements;
             size_t lastindex = generatedFile.src_path.string().find_last_of(".");
-            std::string generated_filename = generatedFile.src_path.string().substr(sizeof(srcFolder), lastindex - sizeof(srcFolder));
+            std::string generated_filename = generatedFile.src_path.string().substr(srcFolder.string().size() + 1, lastindex - srcFolder.string().size() - 1);
+            std::cout << generated_filename << std::endl;
             std::string file_id = sanitize_path_to_id(generated_filename);
             std::ofstream GeneratedFile("./generated/" + generated_filename + ".generated.h");
 
@@ -606,13 +610,37 @@ public:
 
         // std::cout << "Generated " << structs[0].name << " classes" << std::endl;
 
-        generate_register_types(classes);
+        generate_register_types(classes, srcFolder);
     }
 };
 
 int main(int argc, char const *argv[])
 {
+    std::filesystem::path folder_path;
+    if (argc < 2)
+    {
+        std::cerr << "No path provided, defaulting to ./src\n";
+        folder_path = "./src";
+    }
+    else
+    {
+        folder_path = argv[1];
+    }
+
+    if (!std::filesystem::exists(folder_path))
+    {
+        std::cerr << "Error: Path does not exist: " << folder_path << '\n';
+        return 1;
+    }
+
+    if (!std::filesystem::is_directory(folder_path))
+    {
+        std::cerr << "Error: Path is not a directory: " << folder_path << '\n';
+        return 1;
+    }
+
+    std::cout << "Generating C++ code for " << folder_path << std::endl;
     Generator generator;
-    generator.generate();
+    generator.generate(folder_path);
     return 0;
 }
