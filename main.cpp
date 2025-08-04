@@ -195,7 +195,7 @@ class Generator
         {
             GeneratedFile << "int generated_get_" << final_property_name << "() const {\\\n\treturn static_cast<int>(" << final_property_accessor << ");\\\n}\\\n";
             GeneratedFile << "void generated_set_" << final_property_name << "(int value" << "){\\\n\t" << final_property_accessor
-                          << " = static_cast<" << property.rawType << ">(value);\\\n}\\\n";
+                          << " = static_cast<" << property.rawType << ">(value);\\\n notify_property_list_changed();\\\n}\\\n";
             return;
         }
 
@@ -218,7 +218,7 @@ class Generator
                 requirements += "if (" + final_property_name + "_path.is_empty()) { array.append(\"Missing " + final_property_accessor + "\"); }\\\n";
             }
 
-            GeneratedFile << "}\\\n";
+            GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
             return;
         }
 
@@ -236,7 +236,7 @@ class Generator
             requirements += "if (!" + final_property_accessor + ".is_valid()) { array.append(\"Missing " + final_property_name + "\"); }\\\n";
         }
 
-        GeneratedFile << "}\\\n";
+        GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
     }
 
     void generate_property_bindings(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class, std::string accessor = "")
