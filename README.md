@@ -26,10 +26,10 @@
 
 2. **Run Generator**
    ```bash
-   ./gd-gen/main.exe
+   ./gd-gen/main.exe ../src/
    ```
 
-   Remember to set your current folder to where the src folder is (also it is hard coded as src, it will be fixed soon)
+   If no source folder is provided it defaults to `../src/`
 
 3. **Generated Output**
    - Boilerplate headers and source files are generated automatically.

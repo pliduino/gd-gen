@@ -618,8 +618,8 @@ int main(int argc, char const *argv[])
     std::filesystem::path folder_path;
     if (argc < 2)
     {
-        std::cerr << "No path provided, defaulting to ./src\n";
-        folder_path = "./src";
+        std::cerr << "No path provided, defaulting to ../src\n";
+        folder_path = "../src";
     }
     else
     {
