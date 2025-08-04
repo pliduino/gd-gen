@@ -71,13 +71,13 @@ void dumpPropertiesGetSetDef(std::ofstream &output, const std::vector<GProperty>
     }
 }
 
-void generate_register_types(std::vector<GClass> classes, std::filesystem::path srcFolder)
+void generate_register_types(std::vector<GClass> classes, std::filesystem::path srcFolder, std::filesystem::path genFolder)
 {
-    std::ofstream GeneratedFile("./generated/register_types.generated.h");
+    std::ofstream GeneratedFile(genFolder / "register_types.generated.h");
 
     for (auto &class_ : classes)
     {
-        GeneratedFile << "#include <" << class_.path.string().substr(srcFolder.string().size()) << ">\n";
+        GeneratedFile << "#include <" << class_.path.string().substr(srcFolder.string().size() + 1) << ">\n";
     }
 
     GeneratedFile << "\n#define GENERATED_TYPES() ";
@@ -189,12 +189,21 @@ class Generator
         const auto final_property_name = sanitize_accessor_to_identifier(accessor) + property.name;
         const auto final_property_accessor = accessor + property.name;
 
+        bool generate_get = property.options.custom_getter.empty();
+        bool generate_set = property.options.custom_setter.empty();
+
         const auto &enum_ = enums.find(property.rawType);
         if (enum_ != enums.end())
         {
-            GeneratedFile << "int generated_get_" << final_property_name << "() const {\\\n\treturn static_cast<int>(" << final_property_accessor << ");\\\n}\\\n";
-            GeneratedFile << "void generated_set_" << final_property_name << "(int value" << "){\\\n\t" << final_property_accessor
-                          << " = static_cast<" << property.rawType << ">(value);\\\n notify_property_list_changed();\\\n}\\\n";
+            if (generate_get)
+            {
+                GeneratedFile << "int generated_get_" << final_property_name << "() const {\\\n\treturn static_cast<int>(" << final_property_accessor << ");\\\n}\\\n";
+            }
+            if (generate_set)
+            {
+                GeneratedFile << "void generated_set_" << final_property_name << "(int value" << "){\\\n\t" << final_property_accessor
+                              << " = static_cast<" << property.rawType << ">(value);\\\n notify_property_list_changed();\\\n}\\\n";
+            }
             return;
         }
 
@@ -202,19 +211,35 @@ class Generator
         {
             core_functions += "private:\\\nNodePath " + final_property_name + "_path;\\\npublic:\\\n";
 
-            core_functions += property.rawType + " *get_" + final_property_name + "(){\\\n\tif(" + final_property_accessor + " == nullptr) { " +
-                              final_property_accessor + " = Object::cast_to<" + property.rawType +
-                              ">(get_node_or_null(" + final_property_name + "_path)); }\\\n\treturn " +
-                              final_property_accessor + ";\\\n}\\\n";
+            if (generate_get)
+            {
+                core_functions += property.rawType + " *get_" + final_property_name + "(){\\\n\tif(" + final_property_accessor + " == nullptr) { " +
+                                  final_property_accessor + " = Object::cast_to<" + property.rawType +
+                                  ">(get_node_or_null(" + final_property_name + "_path)); }\\\n\treturn " +
+                                  final_property_accessor + ";\\\n}\\\n";
 
-            GeneratedFile << "NodePath generated_get_" << final_property_name << "(){\\\n\treturn " << final_property_accessor << "_path;\\\n}\\\n";
-            GeneratedFile << "void generated_set_" << final_property_name << "(NodePath value){\\\n\t" << final_property_name
-                          << "_path = value;\\\n\t" << final_property_accessor << " = nullptr;\\\n";
+                GeneratedFile << "NodePath generated_get_" << final_property_name << "(){\\\n\treturn " << final_property_accessor << "_path;\\\n}\\\n";
+            }
 
-            if (_class.parentName != "Resource" && !_class.options.is_resource && property.options.isRequired)
+            if (generate_set)
+            {
+                GeneratedFile << "void generated_set_" << final_property_name << "(NodePath value){\\\n\t" << final_property_name
+                              << "_path = value;\\\n\t" << final_property_accessor << " = nullptr;\\\n";
+            }
+
+            if (_class.parentName != "Resource" && !_class.options.is_resource && property.options.isRequired) // TODO check this later
             {
                 GeneratedFile << "\tupdate_configuration_warnings();\\\n";
-                requirements += "if (" + final_property_name + "_path.is_empty()) { array.append(\"Missing " + final_property_accessor + "\"); }\\\n";
+                requirements += "if (";
+                if (generate_get)
+                {
+                    requirements += final_property_name + "_path.is_empty()";
+                }
+                else
+                {
+                    requirements += property.options.custom_getter + ".is_empty()";
+                }
+                requirements += ") { array.append(\"Missing " + final_property_accessor + "\"); }\\\n";
             }
 
             GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
@@ -225,9 +250,15 @@ class Generator
                                     ? "*"
                                     : "";
 
-        GeneratedFile << property.rawType << pointer_accessor << " generated_get_" << final_property_name << "() const {\\\n\treturn " << final_property_accessor << ";\\\n}\\\n";
-        GeneratedFile << "void generated_set_" << final_property_name << "(" << property.rawType << pointer_accessor << " value" << "){\\\n\t" << final_property_accessor
-                      << " = value;\\\n";
+        if (generate_get)
+        {
+            GeneratedFile << property.rawType << pointer_accessor << " generated_get_" << final_property_name << "() const {\\\n\treturn " << final_property_accessor << ";\\\n}\\\n";
+        }
+        if (generate_set)
+        {
+            GeneratedFile << "void generated_set_" << final_property_name << "(" << property.rawType << pointer_accessor << " value" << "){\\\n\t" << final_property_accessor
+                          << " = value;\\\n";
+        }
 
         if (_class.parentName != "Resource" && !_class.options.is_resource && _class.parentName != "Object" && property.options.isRequired && property.variantType == GType::Resource)
         {
@@ -341,12 +372,30 @@ class Generator
         if (property.options.show_if.empty())
         {
             std::string property_info = generate_property_info(property);
-            GeneratedFile
-                << "ADD_PROPERTY(" << property_info << ", \"set_" << final_property_name << "\", \"get_" << final_property_name << "\");\\\n";
+            GeneratedFile << "ADD_PROPERTY(" << property_info << ", \" ";
+
+            if (property.options.custom_setter.empty())
+            {
+                GeneratedFile << "set_" << final_property_name << "\", \"";
+            }
+            else
+            {
+                GeneratedFile << property.options.custom_setter << "\", \"";
+            }
+
+            if (property.options.custom_getter.empty())
+            {
+                GeneratedFile << "get_" << final_property_name << "\");\\\n";
+            }
+            else
+            {
+                GeneratedFile << property.options.custom_getter << "\");\\\n";
+            }
         }
     }
 
-    std::string generate_property_info(GProperty &property)
+    std::string
+    generate_property_info(GProperty &property)
     {
         std::string hints = generate_property_hints(property);
         std::string usage = generate_property_usage(property);
@@ -375,14 +424,33 @@ class Generator
             GeneratedFile << "\t}\\\n";
 
             get_override += "if (p_name == String(\"" + property.name + "\")) {\\\n";
-            get_override += "\tr_ret = generated_get_" + property.name + "();\\\n";
+            get_override += "\tr_ret = ";
+            if (property.options.custom_getter.empty())
+            {
+                get_override += "generated_get_" + property.name;
+            }
+            else
+            {
+                get_override += property.options.custom_getter;
+            }
+            get_override += "();\\\n";
             get_override += "\treturn true;\\\n";
             get_override += "}\\\n";
 
-            set_override += "if (p_name == String(\"" + property.name + "\")) {\\\n";
-            set_override += "\tgenerated_set_" + property.name + "(p_value);\\\n";
+            set_override += "if (p_name == String(\"" + property.name + "\")) {\\\n\t";
+            if (property.options.custom_setter.empty())
+            {
+                set_override += "generated_set_" + property.name;
+            }
+            else
+            {
+                set_override += property.options.custom_setter;
+            }
+            set_override += "(p_value);\\\n";
             set_override += "\treturn true;\\\n";
             set_override += "}\\\n";
+
+            set_override += "\tgenerated_set_" + property.name + "(p_value);\\\n";
         }
 
         GeneratedFile << "};\\\n";
@@ -609,7 +677,7 @@ public:
 
         // std::cout << "Generated " << structs[0].name << " classes" << std::endl;
 
-        generate_register_types(classes, srcFolder);
+        generate_register_types(classes, srcFolder, genFolder);
     }
 };
 

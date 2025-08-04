@@ -14,6 +14,8 @@ struct GPropertyOptions
     bool multiline_text = false;
     std::string description;
     std::string show_if;
+    std::string custom_getter;
+    std::string custom_setter;
 
     GPropertyOptions() {}
 
