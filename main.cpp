@@ -61,16 +61,6 @@ const std::string type_to_variant(GType type)
     }
 }
 
-void dumpPropertiesGetSetDef(std::ofstream &output, const std::vector<GProperty> &properties)
-{
-    output << "public:\n";
-    for (auto property : properties)
-    {
-        output << property.rawType << " generated_get_" << property.name << "();\n";
-        output << property.rawType << " generated_set_" << property.name << "(" << property.rawType << " value" << ");\n";
-    }
-}
-
 void generate_register_types(std::vector<GClass> classes, std::filesystem::path srcFolder, std::filesystem::path genFolder)
 {
     std::ofstream GeneratedFile(genFolder / "register_types.generated.h");
@@ -86,8 +76,6 @@ void generate_register_types(std::vector<GClass> classes, std::filesystem::path 
         GeneratedFile << "GDREGISTER_CLASS(" << class_.name << ");\\\n";
     }
     GeneratedFile << "(void)0";
-
-    // dumpPropertiesGetSetImpl(OutputSourceFile, className, properties);
 
     GeneratedFile.close();
 }
