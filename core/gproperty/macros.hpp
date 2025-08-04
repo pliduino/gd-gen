@@ -23,6 +23,12 @@ constexpr bool is_valid_gproperty_flag(const char *flag)
     if (starts_with(flag, "ShowIf(")) // TODO: Validate statement
         return true;
 
+    if (starts_with(flag, "Getter(")) // TODO: Validate statement
+        return true;
+
+    if (starts_with(flag, "Setter(")) // TODO: Validate statement
+        return true;
+
     return false;
 }
 

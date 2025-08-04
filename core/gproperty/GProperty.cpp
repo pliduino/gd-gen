@@ -195,6 +195,73 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
                 exit(1);
             }
         }
+        else if (token.value == "Getter")
+        {
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::LeftParenthesis)
+            {
+                std::cerr << "Getter expected left parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::Identifier)
+            {
+                std::cerr << "Getter expected identifier, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            custom_getter = token.value;
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::RightParenthesis)
+            {
+                std::cerr << "Getter expected right parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+        }
+        else if (token.value == "Setter")
+        {
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::LeftParenthesis)
+            {
+                std::cerr << "Getter expected left parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::Identifier)
+            {
+                std::cerr << "Getter expected identifier, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            custom_setter = token.value;
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::RightParenthesis)
+            {
+                std::cerr << "Getter expected right parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+        }
+        else
+        {
+            std::cerr << "Unknown flag, got '" << token.value << "'\n";
+            exit(1);
+        }
 
         not_first = true;
     }
