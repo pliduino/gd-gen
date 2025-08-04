@@ -407,9 +407,9 @@ class Generator
 public:
     void generate(std::filesystem::path srcFolder)
     {
-        auto genFolder = srcFolder.parent_path() / "generated";
+        auto genFolder = (srcFolder.parent_path() / "generated");
+
         std::filesystem::create_directory(genFolder);
-        std::cout << "Generated folder: " << genFolder << std::endl;
 
         std::vector<std::filesystem::path> srcFiles;
 
@@ -473,9 +473,8 @@ public:
             std::string requirements;
             size_t lastindex = generatedFile.src_path.string().find_last_of(".");
             std::string generated_filename = generatedFile.src_path.string().substr(srcFolder.string().size() + 1, lastindex - srcFolder.string().size() - 1);
-            std::cout << generated_filename << std::endl;
             std::string file_id = sanitize_path_to_id(generated_filename);
-            std::ofstream GeneratedFile("./generated/" + generated_filename + ".generated.h");
+            std::ofstream GeneratedFile(genFolder / (generated_filename + ".generated.h"));
 
             size_t class_index;
             while (!generatedFile.classes_indices.empty())
@@ -627,6 +626,11 @@ int main(int argc, char const *argv[])
         folder_path = argv[1];
     }
 
+    folder_path = folder_path.lexically_normal();
+
+    // Removes trailing slashes
+    folder_path = folder_path.filename().empty() ? folder_path.parent_path() : folder_path;
+
     if (!std::filesystem::exists(folder_path))
     {
         std::cerr << "Error: Path does not exist: " << folder_path << '\n';
@@ -639,7 +643,8 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-    std::cout << "Generating C++ code for " << folder_path << std::endl;
+    std::cout << "Generating code for " << folder_path << '\n';
+
     Generator generator;
     generator.generate(folder_path);
     return 0;
