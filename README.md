@@ -18,7 +18,7 @@
 ## 🚀 Getting Started
 
 1. **Install**  
-   Clone this repository or add it as a submodule to your Godot C++ project.
+   Clone this repository to your project folder, it has scons so just compile as normal with "scons".
 
    ```bash
    git clone https://github.com/yourname/gd-gen.git
@@ -26,12 +26,16 @@
 
 2. **Run Generator**
    ```bash
-   ./gd-gen path/to/your/source/files
+   ./gd-gen/main.exe
    ```
+
+   Remember to set your current folder to where the src folder is (also it is hard coded as src, it will be fixed soon)
 
 3. **Generated Output**
    - Boilerplate headers and source files are generated automatically.
    - Naming, property registration, and signal declarations handled for you.
+   - Remember to call GENERATED_BODY() inside the class and include <generated/myclass.generated.h>
+   - There's also a generated register_types file, also add it and add the macro GENERATED_TYPES() to initialize_xxx_module
 
 ---
 
