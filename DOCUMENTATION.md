@@ -7,6 +7,10 @@ Registers a class with Godot.
 **Modifiers:**
 - `Resource` — Forces the class to be treated as a `Resource` (useful if detection fails — report as a bug if needed).
 - `CustomBindings` — Enables a `custom_bind_methods()` function for manual binding access.
+- `Virtual` — Marks the class as virtual; it won't be instantiable from scripts or the editor.
+- `Abstract` — Prevents direct instantiation of the class entirely, including in C++ (must be subclassed).
+- `Runtime` — Registers the class only at runtime; it won't be exposed to the editor or serialized.
+- `Internal` — Hides the class from the editor and scripting APIs; useful for engine-only or implementation-detail types.
 
 ---
 
