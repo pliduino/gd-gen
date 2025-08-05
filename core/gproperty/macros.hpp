@@ -29,7 +29,7 @@ constexpr bool is_valid_gproperty_flag(const char *flag)
     if (starts_with(flag, "Setter(")) // TODO: Validate statement
         return true;
 
-    if (starts_with(flag, "HintRange(")) // TODO: Validate values
+    if (starts_with(flag, "Range(")) // TODO: Validate values
         return true;
 
     return false;
