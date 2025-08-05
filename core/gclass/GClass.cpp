@@ -49,6 +49,51 @@ GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
         {
             custom_bindings = true;
         }
+        else if (token.value == "Virtual")
+        {
+            if (class_type != GClassType::Base)
+            {
+                std::cerr << "Class can't be " << get_class_type_string(GClassType::Virtual) << " and "
+                          << get_class_type_string(class_type) << " at the same time\n";
+                exit(1);
+            }
+            class_type = GClassType::Virtual;
+        }
+        else if (token.value == "Abstract")
+        {
+            if (class_type != GClassType::Base)
+            {
+                std::cerr << "Class can't be " << get_class_type_string(GClassType::Abstract) << " and "
+                          << get_class_type_string(class_type) << " at the same time\n";
+                exit(1);
+            }
+            class_type = GClassType::Abstract;
+        }
+        else if (token.value == "Runtime")
+        {
+            if (class_type != GClassType::Base)
+            {
+                std::cerr << "Class can't be " << get_class_type_string(GClassType::Runtime) << " and "
+                          << get_class_type_string(class_type) << " at the same time\n";
+                exit(1);
+            }
+            class_type = GClassType::Runtime;
+        }
+        else if (token.value == "Internal")
+        {
+            if (class_type != GClassType::Base)
+            {
+                std::cerr << "Class can't be " << get_class_type_string(GClassType::Internal) << " and "
+                          << get_class_type_string(class_type) << " at the same time\n";
+                exit(1);
+            }
+            class_type = GClassType::Internal;
+        }
+        else
+        {
+            std::cerr << "Unknown GCLASS option '" << token.value << "'\n";
+            exit(1);
+        }
 
         not_first = true;
     }
@@ -99,4 +144,20 @@ GClass::GClass(std::queue<TokenValue> &tokens)
         exit(1);
     }
     parentName = token.value;
+}
+
+std::string get_class_type_string(GClassType type)
+{
+    switch (type)
+    {
+    case GClassType::Base:
+        return "Base";
+    case GClassType::Virtual:
+        return "Virtual";
+    case GClassType::Abstract:
+        return "Abstract";
+    case GClassType::Runtime:
+        return "Runtime";
+    }
+    return "";
 }

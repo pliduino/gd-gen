@@ -7,10 +7,22 @@
 #include <core/gsignal/GSignal.h>
 #include <core/gfunction/GFunction.h>
 
+enum class GClassType
+{
+    Base,
+    Virtual,
+    Abstract,
+    Runtime,
+    Internal
+};
+
+std::string get_class_type_string(GClassType type);
+
 struct GClassOptions
 {
     bool is_resource = false;
     bool custom_bindings = false;
+    GClassType class_type = GClassType::Base;
 
     GClassOptions() {}
 

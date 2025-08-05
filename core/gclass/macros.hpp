@@ -14,6 +14,10 @@ namespace GDGenInternal
         constexpr const char *valid_flags[] = {
             "CustomBindings",
             "Resource",
+            "Virtual",
+            "Abstract",
+            "Runtime",
+            "Internal",
         };
         constexpr size_t num_valid = sizeof(valid_flags) / sizeof(valid_flags[0]);
 
