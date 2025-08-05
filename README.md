@@ -21,7 +21,7 @@
    Clone this repository to your project folder, it has scons so just compile as normal with "scons".
 
    ```bash
-   git clone https://github.com/yourname/gd-gen.git
+   git clone https://github.com/pliduino/gd-gen.git
    ```
 
 2. **Run Generator**
