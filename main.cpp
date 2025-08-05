@@ -318,26 +318,26 @@ class Generator
             }
             break;
         case GType::Float:
-            if (property.options.hint_range_enabled)
+            if (property.options.range_enabled)
             {
-                hints = "PROPERTY_HINT_RANGE, \"" + std::to_string(property.options.hint_range.min) +
-                        "," + std::to_string(property.options.hint_range.max);
+                hints = "PROPERTY_HINT_RANGE, \"" + std::to_string(property.options.range.min) +
+                        "," + std::to_string(property.options.range.max);
 
-                if (property.options.hint_range.step != 0.0)
+                if (property.options.range.step != 0.0)
                 {
-                    hints += "," + std::to_string(property.options.hint_range.step);
+                    hints += "," + std::to_string(property.options.range.step);
                 }
             }
             break;
         case GType::Int:
-            if (property.options.hint_range_enabled)
+            if (property.options.range_enabled)
             {
-                hints = "PROPERTY_HINT_RANGE, \"" + std::to_string(static_cast<int>(property.options.hint_range.min)) +
-                        "," + std::to_string(static_cast<int>(property.options.hint_range.max));
+                hints = "PROPERTY_HINT_RANGE, \"" + std::to_string(static_cast<int>(property.options.range.min)) +
+                        "," + std::to_string(static_cast<int>(property.options.range.max));
 
-                if (property.options.hint_range.step != 0.0)
+                if (property.options.range.step != 0.0)
                 {
-                    hints += "," + std::to_string(static_cast<int>(property.options.hint_range.step));
+                    hints += "," + std::to_string(static_cast<int>(property.options.range.step));
                 }
             }
             break;

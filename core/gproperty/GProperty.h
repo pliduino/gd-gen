@@ -8,7 +8,7 @@
 
 struct GPropertyOptions
 {
-    struct HintRange
+    struct Range
     {
         float min = 0.0;
         float max = 0.0;
@@ -25,8 +25,8 @@ struct GPropertyOptions
     std::string custom_setter;
 
     // Maybe create a proper struct parsing stuff instead of this
-    bool hint_range_enabled = false;
-    HintRange hint_range;
+    bool range_enabled = false;
+    Range range;
 
     GPropertyOptions() {}
 
