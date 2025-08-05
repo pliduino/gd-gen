@@ -8,6 +8,13 @@
 
 struct GPropertyOptions
 {
+    struct HintRange
+    {
+        float min = 0.0;
+        float max = 0.0;
+        float step = 0.0;
+    };
+
     bool isRequired = false;
     bool hideInInspector = false;
     bool noStorage = false;
@@ -16,6 +23,10 @@ struct GPropertyOptions
     std::string show_if;
     std::string custom_getter;
     std::string custom_setter;
+
+    // Maybe create a proper struct parsing stuff instead of this
+    bool hint_range_enabled = false;
+    HintRange hint_range;
 
     GPropertyOptions() {}
 

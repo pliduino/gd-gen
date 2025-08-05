@@ -22,6 +22,7 @@ Registers a property inside the class.
 - `ShowIf(condition)` — Only shows the property if the given condition evaluates to true.
 - `Getter(getter)` — Uses the specified method name as the property's getter.
 - `Setter(setter)` — Uses the specified method name as the property's setter.
+- `Range(min, max, step)` - Same as hint range, step is optional. Available for both floats and ints
 
 > ⚠️ **Note:** The methods used in `Getter` and `Setter` must be registered using `GFUNCTION(...)`,
 > or manually bound using `ClassDB::bind_method`, otherwise the property binding **will not work**.

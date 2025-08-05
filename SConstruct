@@ -20,5 +20,5 @@ def AllSources(node='.', pattern='*.cpp'):
 
 sources = AllSources("./", "*.cpp")
 
-program = env.Program("main", sources)
+program = env.Program("gd-gen", sources)
 Return("program")
