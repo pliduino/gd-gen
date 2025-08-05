@@ -574,7 +574,7 @@ public:
                 std::string core_functions;
 
                 GeneratedFile
-                    << "#include <generator/lib.hpp>\n";
+                    << "#include <gd-gen/lib.hpp>\n";
                 GeneratedFile << "\n#undef FILE_IDENTIFIER"
                               << "\n#define FILE_IDENTIFIER " << file_id << '\n';
                 GeneratedFile << "\n#define " << file_id << "_" << _class.generator_line << "_GENERATED_BODY() GDCLASS(" << _class.name << ", " << _class.parentName
