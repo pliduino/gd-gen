@@ -32,6 +32,9 @@ constexpr bool is_valid_gproperty_flag(const char *flag)
     if (starts_with(flag, "Range(")) // TODO: Validate values
         return true;
 
+    if (starts_with(flag, "Group(")) // TODO: Validate value
+        return true;
+
     return false;
 }
 
