@@ -191,7 +191,7 @@ class Generator
             return;
         }
 
-        const auto final_property_name = sanitize_accessor_to_identifier(accessor) + property.name;
+        const auto sanitized_property_name = sanitize_accessor_to_identifier(accessor) + property.name;
         const auto final_property_accessor = accessor + property.name;
 
         bool generate_get = property.options.custom_getter.empty();
@@ -202,11 +202,11 @@ class Generator
         {
             if (generate_get)
             {
-                GeneratedFile << "int generated_get_" << final_property_name << "() const {\\\n\treturn static_cast<int>(" << final_property_accessor << ");\\\n}\\\n";
+                GeneratedFile << "int generated_get_" << sanitized_property_name << "() const {\\\n\treturn static_cast<int>(" << final_property_accessor << ");\\\n}\\\n";
             }
             if (generate_set)
             {
-                GeneratedFile << "void generated_set_" << final_property_name << "(int value" << "){\\\n\t" << final_property_accessor
+                GeneratedFile << "void generated_set_" << sanitized_property_name << "(int value" << "){\\\n\t" << final_property_accessor
                               << " = static_cast<" << property.rawType << ">(value);\\\n notify_property_list_changed();\\\n}\\\n";
             }
             return;
@@ -214,21 +214,21 @@ class Generator
 
         if (property.variantType == GType::NodePathToRaw)
         {
-            core_functions += "private:\\\nNodePath " + final_property_name + "_path;\\\npublic:\\\n";
+            core_functions += "private:\\\nNodePath " + sanitized_property_name + "_path;\\\npublic:\\\n";
 
             if (generate_get)
             {
-                core_functions += property.rawType + " *get_" + final_property_name + "(){\\\n\tif(" + final_property_accessor + " == nullptr) { " +
+                core_functions += property.rawType + " *get_" + sanitized_property_name + "(){\\\n\tif(" + final_property_accessor + " == nullptr) { " +
                                   final_property_accessor + " = Object::cast_to<" + property.rawType +
-                                  ">(get_node_or_null(" + final_property_name + "_path)); }\\\n\treturn " +
+                                  ">(get_node_or_null(" + sanitized_property_name + "_path)); }\\\n\treturn " +
                                   final_property_accessor + ";\\\n}\\\n";
 
-                GeneratedFile << "NodePath generated_get_" << final_property_name << "(){\\\n\treturn " << final_property_accessor << "_path;\\\n}\\\n";
+                GeneratedFile << "NodePath generated_get_" << sanitized_property_name << "(){\\\n\treturn " << final_property_accessor << "_path;\\\n}\\\n";
             }
 
             if (generate_set)
             {
-                GeneratedFile << "void generated_set_" << final_property_name << "(NodePath value){\\\n\t" << final_property_name
+                GeneratedFile << "void generated_set_" << sanitized_property_name << "(NodePath value){\\\n\t" << sanitized_property_name
                               << "_path = value;\\\n\t" << final_property_accessor << " = nullptr;\\\n";
             }
 
@@ -238,7 +238,7 @@ class Generator
                 requirements += "if (";
                 if (generate_get)
                 {
-                    requirements += final_property_name + "_path.is_empty()";
+                    requirements += sanitized_property_name + "_path.is_empty()";
                 }
                 else
                 {
@@ -257,18 +257,18 @@ class Generator
 
         if (generate_get)
         {
-            GeneratedFile << property.rawType << pointer_accessor << " generated_get_" << final_property_name << "() const {\\\n\treturn " << final_property_accessor << ";\\\n}\\\n";
+            GeneratedFile << property.rawType << pointer_accessor << " generated_get_" << sanitized_property_name << "() const {\\\n\treturn " << final_property_accessor << ";\\\n}\\\n";
         }
         if (generate_set)
         {
-            GeneratedFile << "void generated_set_" << final_property_name << "(" << property.rawType << pointer_accessor << " value" << "){\\\n\t" << final_property_accessor
+            GeneratedFile << "void generated_set_" << sanitized_property_name << "(" << property.rawType << pointer_accessor << " value" << "){\\\n\t" << final_property_accessor
                           << " = value;\\\n";
         }
 
         if (_class.parentName != "Resource" && !_class.options.is_resource && _class.parentName != "Object" && property.options.isRequired && property.variantType == GType::Resource)
         {
             GeneratedFile << "\tupdate_configuration_warnings();\\\n";
-            requirements += "if (!" + final_property_accessor + ".is_valid()) { array.append(\"Missing " + final_property_name + "\"); }\\\n";
+            requirements += "if (!" + final_property_accessor + ".is_valid()) { array.append(\"Missing " + sanitized_property_name + "\"); }\\\n";
         }
 
         GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
@@ -380,16 +380,20 @@ class Generator
         return usage;
     }
 
-    void generate_property_bindings(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class, std::string accessor = "")
+    void generate_property_bindings(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class, std::string accessor = "", std::string grouping = "")
     {
         const auto &struct_ = structs.find(property.rawType);
 
         /// Structs are added as subproperties
         if (struct_ != structs.end())
         {
+            std::string nested_grouping = grouping.empty() ? property.options.group : grouping + "/" + property.options.group;
+            nested_grouping += nested_grouping.empty() ? property.name : "/" + property.name;
+
             for (auto struct_property : struct_->second.properties)
             {
-                generate_property_bindings(struct_property, GeneratedFile, _class, accessor + property.name + ".");
+                generate_property_bindings(struct_property, GeneratedFile, _class, accessor + property.name + ".",
+                                           nested_grouping);
             }
             return;
         }
@@ -409,7 +413,7 @@ class Generator
         // If show_if is set property will be added to property list manually
         if (property.options.show_if.empty())
         {
-            std::string property_info = generate_property_info(property);
+            std::string property_info = generate_property_info(property, grouping);
             GeneratedFile << "ADD_PROPERTY(" << property_info << ", \"";
 
             if (property.options.custom_setter.empty())
@@ -432,16 +436,31 @@ class Generator
         }
     }
 
-    std::string
-    generate_property_info(GProperty &property)
+    std::string generate_property_info(GProperty &property, std::string nested_group)
     {
         std::string hints = generate_property_hints(property);
         std::string usage = generate_property_usage(property);
 
         std::string variant = type_to_variant(property.variantType);
 
+        std::string registered_name;
+
+        if (!nested_group.empty())
+        {
+            registered_name = nested_group + "/";
+        }
+
+        if (!property.options.group.empty())
+        {
+            registered_name += property.options.group + "/";
+        }
+
+        registered_name += property.name;
+
         std::string property_info = "PropertyInfo(Variant::" + variant + ", \"";
-        property_info += property.options.group.empty() ? property.name : property.options.group + "/" + property.name;
+
+        property_info += registered_name;
+
         property_info += "\", " + hints + "\", " + usage + ")";
 
         return property_info;
@@ -510,7 +529,8 @@ class Generator
 
     void generate_property_list_entry(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class)
     {
-        std::string property_info = generate_property_info(property);
+        // FIXME: Add support for nested groups and accessors
+        std::string property_info = generate_property_info(property, "");
         GeneratedFile << "p_list->push_back(" << property_info << ");\\\n";
     }
 
@@ -558,7 +578,7 @@ public:
                     should_generate = true;
                     break;
                 case GToken::GSTRUCT:
-                    // Missing struct support
+                    add_struct(GStruct(tokens));
                     break;
                 case GToken::GENUM:
                     add_enum(GEnum(tokens));
