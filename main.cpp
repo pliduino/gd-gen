@@ -440,7 +440,16 @@ class Generator
 
         std::string variant = type_to_variant(property.variantType);
 
-        return "PropertyInfo(Variant::" + variant + ", \"" + property.name + "\", " + hints + "\", " + usage + ")";
+        std::string property_info = "PropertyInfo(Variant::" + variant + ", \"";
+        property_info += property.options.group.empty() ? property.name : property.options.group + "/" + property.name;
+        property_info += "\", " + hints + "\", " + usage + ")";
+
+        if (!property.options.group.empty())
+        {
+            std::cout << "Group: " << property_info << std::endl;
+        }
+
+        return property_info;
     }
 
     void generate_custom_property_list(std::ofstream &GeneratedFile, GClass &_class)

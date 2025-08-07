@@ -327,6 +327,36 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
                 exit(1);
             }
         }
+        else if (token.value == "Group")
+        {
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::LeftParenthesis)
+            {
+                std::cerr << "Group expected an left parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::String)
+            {
+                std::cerr << "Group expected an string, got '" << token.value << "'\n";
+                exit(1);
+            }
+            group = token.value;
+
+            token = tokens.front();
+            tokens.pop();
+
+            if (token.token != GToken::RightParenthesis)
+            {
+                std::cerr << "Group expected an right parenthesis, got '" << token.value << "'\n";
+                exit(1);
+            }
+        }
         else
         {
             std::cerr << "Unknown flag, got '" << token.value << "'\n";

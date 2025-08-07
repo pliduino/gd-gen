@@ -23,6 +23,7 @@ struct GPropertyOptions
     std::string show_if;
     std::string custom_getter;
     std::string custom_setter;
+    std::string group;
 
     // Maybe create a proper struct parsing stuff instead of this
     bool range_enabled = false;
