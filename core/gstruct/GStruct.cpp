@@ -90,8 +90,7 @@ GStruct::GStruct(std::queue<TokenValue> &tokens)
             level--;
             if (level == 0)
             {
-                // TODO: Remember what this does
-                // return gStruct;
+                return;
             }
         }
         else if (token.token == GToken::GPROPERTY)

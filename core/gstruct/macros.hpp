@@ -28,7 +28,5 @@ constexpr bool is_valid_gstruct_flag(const char *flag)
 
 #define VALIDATE_EACH_GSTRUCT_FLAG(...) FOR_EACH(CHECK_GSTRUCT_FLAG, SEMICOLON_END, __VA_ARGS__);
 
-// #define GSTRUCT(...) \
-//     VALIDATE_EACH_GSTRUCT_FLAG(__VA_ARGS__)
-
-#define GSTRUCT(...) static_assert(false, "GSTRUCT has not been implemented");
+#define GSTRUCT(...) \
+    VALIDATE_EACH_GSTRUCT_FLAG(__VA_ARGS__);
