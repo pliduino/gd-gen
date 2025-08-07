@@ -444,11 +444,6 @@ class Generator
         property_info += property.options.group.empty() ? property.name : property.options.group + "/" + property.name;
         property_info += "\", " + hints + "\", " + usage + ")";
 
-        if (!property.options.group.empty())
-        {
-            std::cout << "Group: " << property_info << std::endl;
-        }
-
         return property_info;
     }
 
