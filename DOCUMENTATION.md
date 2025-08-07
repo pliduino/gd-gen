@@ -61,3 +61,56 @@ Automatically generates:
 emit_health_changed(...)
 connect_health_changed(Callable callable)
 ```
+
+---
+
+### 🟣 `GSTRUCT(...)`
+Registers a struct as a serializable and editable container of grouped properties in the Godot inspector.
+
+When used inside a class with GPROPERTY(...), the struct's fields are shown together under a collapsible section. Nested GSTRUCTs are also supported and displayed as nested sections.
+
+Each field in the struct must be marked with GPROPERTY(...) to be visible and editable.
+
+⚠️ GSTRUCTS currently do not support many GPROPERTY flags, GFUNCTIONs or GSIGNALs.
+
+Example:
+
+```cpp
+GSTRUCT()
+struct WeaponStats {
+    GPROPERTY(Group("Damage"))
+    int damage = 10;
+
+    GPROPERTY(Group("Damage"))
+    int damage_type = 0;
+
+    GPROPERTY()
+    float range = 15.0f;
+};
+
+GSTRUCT()
+struct EnemyStats {
+    GPROPERTY(Group("Equipment"))
+    WeaponStats weapon;
+    GPROPERTY()
+    float speed = 4.0f;
+};
+```
+
+When used in a class:
+
+```cpp
+GCLASS()
+class MyEnemy : public Node {
+    GPROPERTY() EnemyStats stats;
+};
+```
+This displays in the inspector as a collapsible group "stats", containing:
+
+- Equipment
+    - weapon
+        - Damage
+            - damage
+            - damage_type
+        - range
+- speed
