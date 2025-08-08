@@ -168,6 +168,9 @@ class Generator
     std::unordered_map<std::string, GStruct> structs;
     std::unordered_map<std::string, GEnum> enums;
 
+    // Temporary until major refator, first is class_name, second is the function itself
+    std::unordered_map<std::string, std::string> property_list_function;
+
     inline void add_struct(GStruct gStruct)
     {
         structs[gStruct.name] = gStruct;
@@ -350,31 +353,13 @@ class Generator
 
     std::string generate_property_usage(GProperty &property)
     {
-        std::string usage = "";
+        std::string usage = "PROPERTY_USAGE_STORAGE";
         bool any = false;
 
         if (property.options.noStorage)
         {
-            if (any)
-            {
-                usage += "|";
-            }
-            usage += "PROPERTY_USAGE_NO_EDITOR";
+            usage = "PROPERTY_USAGE_NONE";
             any = true;
-        }
-        if (property.options.hideInInspector)
-        {
-            if (any)
-            {
-                usage += "|";
-            }
-            usage = "PROPERTY_USAGE_STORAGE";
-            any = true;
-        }
-
-        if (!any)
-        {
-            usage = "PROPERTY_USAGE_DEFAULT";
         }
 
         return usage;
@@ -410,33 +395,31 @@ class Generator
             GeneratedFile << "ClassDB::bind_method(D_METHOD(\"set_" << final_property_name << "\", \"value\"), &" << _class.name << "::generated_set_" << final_property_name << ");\\\n";
         }
 
-        // If show_if is set property will be added to property list manually
-        if (property.options.show_if.empty())
+        // Properties are not registered for the editor here, that is done in
+        // the _get_property_list for finer control
+        std::string property_info = generate_property_info(property, grouping, _class);
+        GeneratedFile << "ADD_PROPERTY(" << property_info << ", \"";
+
+        if (property.options.custom_setter.empty())
         {
-            std::string property_info = generate_property_info(property, grouping);
-            GeneratedFile << "ADD_PROPERTY(" << property_info << ", \"";
+            GeneratedFile << "set_" << final_property_name << "\", \"";
+        }
+        else
+        {
+            GeneratedFile << property.options.custom_setter << "\", \"";
+        }
 
-            if (property.options.custom_setter.empty())
-            {
-                GeneratedFile << "set_" << final_property_name << "\", \"";
-            }
-            else
-            {
-                GeneratedFile << property.options.custom_setter << "\", \"";
-            }
-
-            if (property.options.custom_getter.empty())
-            {
-                GeneratedFile << "get_" << final_property_name << "\");\\\n";
-            }
-            else
-            {
-                GeneratedFile << property.options.custom_getter << "\");\\\n";
-            }
+        if (property.options.custom_getter.empty())
+        {
+            GeneratedFile << "get_" << final_property_name << "\");\\\n";
+        }
+        else
+        {
+            GeneratedFile << property.options.custom_getter << "\");\\\n";
         }
     }
 
-    std::string generate_property_info(GProperty &property, std::string nested_group)
+    std::string generate_property_info(GProperty &property, std::string nested_group, GClass class_)
     {
         std::string hints = generate_property_hints(property);
         std::string usage = generate_property_usage(property);
@@ -461,77 +444,34 @@ class Generator
 
         property_info += registered_name;
 
-        property_info += "\", " + hints + "\", " + usage + ")";
+        property_info += "\", " + hints + "\", " + usage;
+
+        if (!property.options.show_if.empty())
+        {
+            property_list_function[class_.name] += "if (" + property.options.show_if + ") {\\\n";
+            property_list_function[class_.name] += "p_list->push_back(" + property_info + "|PROPERTY_USAGE_EDITOR));\\\n";
+            property_list_function[class_.name] += "\t}\\\n";
+        }
+        else if (property.options.hideInInspector)
+        {
+            // Do nothing
+        }
+        else
+        {
+            property_list_function[class_.name] += "p_list->push_back(" + property_info + "|PROPERTY_USAGE_EDITOR));\\\n";
+        }
+        property_info += ")";
 
         return property_info;
     }
 
-    void generate_custom_property_list(std::ofstream &GeneratedFile, GClass &_class)
+    void generate_custom_property_list(std::ofstream &GeneratedFile, GClass &class_)
     {
-        std::string get_override = "";
-        std::string set_override = "";
-
         GeneratedFile << "void " << "_get_property_list(List<PropertyInfo> *p_list) {\\\n\t";
 
-        for (GProperty &property : _class.properties)
-        {
-            if (property.options.show_if.empty())
-            {
-                continue;
-            }
+        GeneratedFile << class_.name << "_GENERATED_PROPERTY_LIST();\\\n";
 
-            GeneratedFile << "if (" << property.options.show_if << ") {\\\n";
-            generate_property_list_entry(property, GeneratedFile, _class);
-            GeneratedFile << "\t}\\\n";
-
-            get_override += "if (p_name == String(\"" + property.name + "\")) {\\\n";
-            get_override += "\tr_ret = ";
-            if (property.options.custom_getter.empty())
-            {
-                get_override += "generated_get_" + property.name;
-            }
-            else
-            {
-                get_override += property.options.custom_getter;
-            }
-            get_override += "();\\\n";
-            get_override += "\treturn true;\\\n";
-            get_override += "}\\\n";
-
-            set_override += "if (p_name == String(\"" + property.name + "\")) {\\\n\t";
-            if (property.options.custom_setter.empty())
-            {
-                set_override += "generated_set_" + property.name;
-            }
-            else
-            {
-                set_override += property.options.custom_setter;
-            }
-            set_override += "(p_value);\\\n";
-            set_override += "\treturn true;\\\n";
-            set_override += "}\\\n";
-
-            set_override += "\tgenerated_set_" + property.name + "(p_value);\\\n";
-        }
-
-        GeneratedFile << "};\\\n";
-
-        GeneratedFile << "bool _get(const StringName &p_name, Variant &r_ret) const {\\\n";
-        GeneratedFile << get_override;
-        GeneratedFile << "\treturn false;\\\n";
         GeneratedFile << "}\\\n";
-
-        GeneratedFile << "bool _set(const StringName &p_name, const Variant &p_value) {\\\n";
-        GeneratedFile << set_override;
-        GeneratedFile << "\treturn false;\\\n";
-        GeneratedFile << "}\\\n";
-    }
-
-    void generate_property_list_entry(GProperty &property, std::ofstream &GeneratedFile, const GClass &_class)
-    {
-        // FIXME: Add support for nested groups and accessors
-        std::string property_info = generate_property_info(property, "");
-        GeneratedFile << "p_list->push_back(" << property_info << ");\\\n";
     }
 
 public:
@@ -627,9 +567,9 @@ public:
                 {
                     generate_property_getset(property, GeneratedFile, core_functions, requirements, _class);
                 }
-
                 generate_custom_property_list(GeneratedFile, _class);
 
+                /// Generating signals emit/connect
                 for (auto signal : _class.signals)
                 {
                     core_functions += "public:\\\nvoid emit_" + signal.name + "(";
@@ -730,10 +670,15 @@ public:
                     GeneratedFile << "), &" << _class.name << "::" << function.name << ");\\\n";
                 }
 
-                GeneratedFile << "(void)0\n";
+                GeneratedFile << "(void)0\n\n";
 
-                GeneratedFile << "\n#define " << file_id << "_" << _class.generator_line << "_CORE_GENERATED_BODY()\\\n"
-                              << core_functions;
+                GeneratedFile << "#define " << _class.name << "_GENERATED_PROPERTY_LIST()\\\n";
+
+                GeneratedFile << property_list_function[_class.name];
+
+                GeneratedFile
+                    << "\n#define " << file_id << "_" << _class.generator_line << "_CORE_GENERATED_BODY()\\\n"
+                    << core_functions;
             }
 
             GeneratedFile.close();
