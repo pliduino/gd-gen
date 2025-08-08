@@ -44,8 +44,8 @@
 Before:
 
 ```cpp
-class MyNode : public godot::Node {
-    GDCLASS(MyNode, godot::Node)
+class MyNode : public Node {
+    GDCLASS(MyNode, Node)
 
 public:
     int health;
@@ -56,7 +56,7 @@ After `gd-gen`:
 
 ```cpp
 GCLASS()
-class MyNode : public godot::Node {
+class MyNode : public Node {
     GENERATED_BODY()
 
 public:
