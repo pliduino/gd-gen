@@ -3,7 +3,7 @@
 #include <string>
 #include <queue>
 
-#include <parser/parser.h>
+#include <lexer/lexer.h>
 #include <core/general/GType.h>
 
 struct GPropertyOptions

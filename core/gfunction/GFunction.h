@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 
-#include <parser/parser.h>
 #include <core/general/GArgument.h>
 
 struct GFunctionOptions

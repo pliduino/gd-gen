@@ -5,7 +5,7 @@
 #include <vector>
 #include <iostream>
 
-#include <parser/parser.h>
+#include <lexer/lexer.h>
 
 struct GEnumOptions
 {

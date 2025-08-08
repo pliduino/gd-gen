@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include <parser/parser.h>
+#include <lexer/lexer.h>
 #include <core/gproperty/GProperty.h>
 #include <core/gsignal/GSignal.h>
 #include <core/gfunction/GFunction.h>
