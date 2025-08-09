@@ -1,5 +1,7 @@
 #pragma once
 
+// Meant to be included in generated files
+
 #include "core/gclass/macros.hpp"
 #include "core/genum/macros.hpp"
 #include "core/gfunction/macros.hpp"

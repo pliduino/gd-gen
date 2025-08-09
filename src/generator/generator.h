@@ -550,7 +550,7 @@ class Generator
             std::string file_id = sanitize_path_to_id(generated_filename);
             std::ofstream GeneratedFile(genFolder / (generated_filename + ".generated.h"));
 
-            GeneratedFile << "#include <gd-gen/lib.hpp>\n";
+            GeneratedFile << "#include <gd-gen/src/gd-gen_macros.hpp>\n";
 
             GeneratedFile << "\n#undef FILE_IDENTIFIER"
                           << "\n#define FILE_IDENTIFIER " << file_id << '\n';
