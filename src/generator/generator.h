@@ -412,9 +412,9 @@ class Generator
 
         // Properties are not registered for the editor here, that is done in
         // the _get_property_list for finer control
-        PropertyInfo property_info =
+        std::string property_info =
             generate_property_info(property, grouping, final_property_name, _class);
-        GeneratedFile << "ADD_PROPERTY(" << property_info.grouped_info << ", \"";
+        GeneratedFile << "ADD_PROPERTY(" << property_info << ", \"";
 
         if (property.options.custom_setter.empty())
         {
@@ -438,36 +438,10 @@ class Generator
         {
             return;
         }
-
-        GeneratedFile << "ADD_PROPERTY(" << property_info.ungrouped_info << ", \"";
-
-        if (property.options.custom_setter.empty())
-        {
-            GeneratedFile << "set_" << final_property_name << "\", \"";
-        }
-        else
-        {
-            GeneratedFile << property.options.custom_setter << "\", \"";
-        }
-
-        if (property.options.custom_getter.empty())
-        {
-            GeneratedFile << "get_" << final_property_name << "\");\\\n";
-        }
-        else
-        {
-            GeneratedFile << property.options.custom_getter << "\");\\\n";
-        }
     }
 
-    struct PropertyInfo
-    {
-        std::string grouped_info;
-        std::string ungrouped_info;
-    };
-
-    PropertyInfo generate_property_info(GProperty &property, std::string nested_group,
-                                        std::string final_property_name, GClass class_)
+    std::string generate_property_info(GProperty &property, std::string nested_group,
+                                       std::string final_property_name, GClass class_)
     {
         std::string hints = generate_property_hints(property);
         std::string usage = generate_property_usage(property);
@@ -495,16 +469,16 @@ class Generator
         property_info_no_grouping += final_property_name;
         property_info_no_grouping += "\", " + hints + "\", PROPERTY_USAGE_NONE)";
 
-        if (!property.options.show_if.empty())
+        if (property.options.hideInInspector)
+        {
+            // Do nothing
+        }
+        else if (!property.options.show_if.empty())
         {
             property_list_function[class_.name] += "if (" + property.options.show_if + ") {\\\n";
             property_list_function[class_.name] += "p_list->push_back(" + property_info_grouping +
                                                    usage + "|PROPERTY_USAGE_EDITOR));\\\n";
             property_list_function[class_.name] += "\t}\\\n";
-        }
-        else if (property.options.hideInInspector)
-        {
-            // Do nothing
         }
         else
         {
@@ -512,9 +486,7 @@ class Generator
                                                    usage + "|PROPERTY_USAGE_EDITOR));\\\n";
         }
 
-        property_info_grouping += "PROPERTY_USAGE_NONE)";
-
-        return {property_info_grouping, property_info_no_grouping};
+        return property_info_no_grouping;
     }
 
    public:
