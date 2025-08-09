@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <queue>
-
-#include <parser/parser.h>
 #include <core/general/GType.h>
+#include <lexer/lexer.h>
+
+#include <queue>
+#include <string>
 
 struct GPropertyOptions
 {
@@ -31,7 +31,7 @@ struct GPropertyOptions
 
     GPropertyOptions() {}
 
-    GPropertyOptions(std::queue<TokenValue> &tokens);
+    GPropertyOptions(TokenStream &token_stream);
 };
 
 struct GProperty
@@ -43,5 +43,5 @@ struct GProperty
     GPropertyOptions options;
 
     GProperty() {}
-    GProperty(std::queue<TokenValue> &tokens);
+    GProperty(TokenStream &token_stream);
 };

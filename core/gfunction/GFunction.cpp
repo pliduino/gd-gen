@@ -1,25 +1,24 @@
 #include "GFunction.h"
 
-#include <iostream>
+#include <helpers/logger.h>
 
-GFunctionOptions::GFunctionOptions(std::queue<TokenValue> &tokens)
+GFunctionOptions::GFunctionOptions(TokenStream &token_stream)
 {
-    TokenValue token;
+    TokenValue token = token_stream.next();
 
-    if (tokens.front().token != GToken::LeftParenthesis)
+    if (token.token != GToken::LeftParenthesis)
     {
-        std::cerr << "Options expected left parenthesis, got '" << tokens.front().value << "'\n";
+        Logger::log("GFunction options expected left parenthesis, got '" + token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
     bool not_first = false;
 
     // Reading Options
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::RightParenthesis)
         {
@@ -30,16 +29,17 @@ GFunctionOptions::GFunctionOptions(std::queue<TokenValue> &tokens)
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "Options expected ','\n";
+                Logger::log("GFunction options expected ',', got " + token.value, LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
         }
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "Options expected identifier, got '" << token.value << "'\n";
+            Logger::log("GFunction options expected identifier, got '" + token.value + "'",
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
 
@@ -47,16 +47,15 @@ GFunctionOptions::GFunctionOptions(std::queue<TokenValue> &tokens)
     }
 }
 
-GFunction::GFunction(std::queue<TokenValue> &tokens)
+GFunction::GFunction(TokenStream &token_stream)
 {
-    options = GFunctionOptions(tokens);
+    options = GFunctionOptions(token_stream);
 
     TokenValue token;
 
     while (true)
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::Inline)
         {
@@ -81,20 +80,23 @@ GFunction::GFunction(std::queue<TokenValue> &tokens)
         }
         else
         {
-            std::cerr << "GFunction expected an identifier";
+            Logger::log(
+                "GFunction expected an identifier for return type, got '" + token.value + "'",
+                LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
     }
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GFunction expected an identifier";
+        Logger::log(
+            "GFunction expected an identifier for the function name, got '" + token.value + "'",
+            LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
     name = token.value;
 
-    std::vector<GArgument> arguments = GArgument::read_garguments(tokens);
+    std::vector<GArgument> arguments = GArgument::read_garguments(token_stream);
     arguments = arguments;
 }

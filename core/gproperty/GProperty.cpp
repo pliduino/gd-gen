@@ -1,26 +1,26 @@
 #include "GProperty.h"
 
-#include <iostream>
+#include <helpers/logger.h>
 
-GProperty::GProperty(std::queue<TokenValue> &tokens)
+GProperty::GProperty(TokenStream &token_stream)
 {
-    options = GPropertyOptions(tokens);
+    options = GPropertyOptions(token_stream);
     TokenValue token;
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GProperty expected an identifier, got " << token.value << '\n';
+        Logger::log("GProperty expected an identifier for type, got " + token.value,
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
     rawType.append(token.value);
 
-    token = tokens.front();
+    token = token_stream.next();
     if (token.token == GToken::Asterisk)
     {
         variantType = GType::NodePathToRaw;
-        tokens.pop();
+        token = token_stream.next();
     }
     else if (rawType == "float" || rawType == "double")
     {
@@ -51,34 +51,32 @@ GProperty::GProperty(std::queue<TokenValue> &tokens)
         variantType = GType::Object;
     }
 
-    token = tokens.front();
-    tokens.pop();
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GProperty expected an identifier, got " << token.value << " raw type " << rawType << '\n';
+        Logger::log("GProperty expected an identifier for name, got " + token.value,
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
     name = token.value;
 }
 
-GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
+GPropertyOptions::GPropertyOptions(TokenStream &token_stream)
 {
-    TokenValue token;
+    TokenValue token = token_stream.next();
 
-    if (tokens.front().token != GToken::LeftParenthesis)
+    if (token.token != GToken::LeftParenthesis)
     {
-        std::cerr << "Options expected left parenthesis, got '" << tokens.front().value << "'\n";
+        Logger::log("GProperty options expected left parenthesis, got " + token.value,
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
     bool not_first = false;
 
     // Reading Options
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::RightParenthesis)
         {
@@ -89,16 +87,17 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "Options expected ','\n";
+                Logger::log("GProperty options expected ',', got " + token.value, LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
         }
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "Options expected identifier, got '" << token.value << "'\n";
+            Logger::log("GProperty options expected identifier, got " + token.value,
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
 
@@ -120,44 +119,43 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
         }
         else if (token.value == "Description")
         {
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::LeftParenthesis)
             {
-                std::cerr << "Description expected left parenthesis, got '" << token.value << "'\n";
+                Logger::log("Description expected left parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::String)
             {
-                std::cerr << "Description expected string, got '" << token.value << "'\n";
+                Logger::log("Description expected string, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
             description = token.value;
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::RightParenthesis)
             {
-                std::cerr << "Description expected right parenthesis, got '" << token.value << "'\n";
+                Logger::log("Description expected right parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
         }
         else if (token.value == "ShowIf")
         {
-
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::LeftParenthesis)
             {
-                std::cerr << "ShowIf expected left parenthesis, got '" << token.value << "'\n";
+                Logger::log("ShowIf expected left parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
@@ -165,95 +163,89 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
 
             bool at_least_one = false;
 
+            token = token_stream.next();
             // Converts tokens between parenthesis to string
-            while (tokens.front().token != GToken::RightParenthesis)
+            while (token.token != GToken::RightParenthesis)
             {
-                at_least_one = true;
-                condition += tokens.front().value;
-                tokens.pop();
-                if (tokens.empty())
+                if (token_stream.empty())
                 {
-                    std::cerr << "ShowIf expected right parenthesis" << "'\n";
+                    Logger::log("ShowIf expected right parenthesis", LogLevel::Error,
+                                token_stream.get_filename(), token.line);
                     exit(1);
                 }
+                at_least_one = true;
+                condition += token.value;
+                token = token_stream.next();
             }
 
             if (!at_least_one)
             {
-                std::cerr << "ShowIf expected at least one token inside parenthesis" << "'\n";
+                Logger::log("ShowIf expected at least one token inside parenthesis",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
             show_if = condition;
-
-            token = tokens.front();
-            tokens.pop();
-
-            if (token.token != GToken::RightParenthesis)
-            {
-                std::cerr << "ShowIf expected right parenthesis, got '" << token.value << "'\n";
-                exit(1);
-            }
         }
         else if (token.value == "Getter")
         {
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::LeftParenthesis)
             {
-                std::cerr << "Getter expected left parenthesis, got '" << token.value << "'\n";
+                Logger::log("Getter expected left parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::Identifier)
             {
-                std::cerr << "Getter expected identifier, got '" << token.value << "'\n";
+                Logger::log("Getter expected identifier, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
             custom_getter = token.value;
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::RightParenthesis)
             {
-                std::cerr << "Getter expected right parenthesis, got '" << token.value << "'\n";
+                Logger::log("Getter expected right parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
         }
         else if (token.value == "Setter")
         {
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::LeftParenthesis)
             {
-                std::cerr << "Getter expected left parenthesis, got '" << token.value << "'\n";
+                Logger::log("Getter expected left parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::Identifier)
             {
-                std::cerr << "Getter expected identifier, got '" << token.value << "'\n";
+                Logger::log("Getter expected identifier, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
             custom_setter = token.value;
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::RightParenthesis)
             {
-                std::cerr << "Getter expected right parenthesis, got '" << token.value << "'\n";
+                Logger::log("Getter expected right parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
         }
@@ -261,105 +253,105 @@ GPropertyOptions::GPropertyOptions(std::queue<TokenValue> &tokens)
         {
             range_enabled = true;
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::LeftParenthesis)
             {
-                std::cerr << "Range expected left parenthesis, got '" << token.value << "'\n";
+                Logger::log("Range expected left parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::Float && token.token != GToken::Integer)
             {
-                std::cerr << "Range expected a number for minimum, got '" << token.value << "'\n";
+                Logger::log("Range expected a number for minimum, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
             range.min = std::stof(token.value);
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::Comma)
             {
-                std::cerr << "Range expected comma, got '" << token.value << "'\n";
+                Logger::log("Range expected comma, got '" + token.value + "'", LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::Float && token.token != GToken::Integer)
             {
-                std::cerr << "Range expected a number for maximum, got '" << token.value << "'\n";
+                Logger::log("Range expected a number for maximum, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
             range.max = std::stof(token.value);
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token == GToken::Comma)
             {
-                token = tokens.front();
-                tokens.pop();
+                token = token_stream.next();
 
                 if (token.token != GToken::Float && token.token != GToken::Integer)
                 {
-                    std::cerr << "Range expected a number for step, got '" << token.value << "'\n";
+                    Logger::log("Range expected a number for step, got '" + token.value + "'",
+                                LogLevel::Error, token_stream.get_filename(), token.line);
                     exit(1);
                 }
 
                 range.step = std::stof(token.value);
 
-                token = tokens.front();
-                tokens.pop();
+                token = token_stream.next();
             }
 
             if (token.token != GToken::RightParenthesis)
             {
-                std::cerr << "Range expected right parenthesis, got '" << token.value << "'\n";
+                Logger::log("Range expected right parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
         }
         else if (token.value == "Group")
         {
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::LeftParenthesis)
             {
-                std::cerr << "Group expected an left parenthesis, got '" << token.value << "'\n";
+                Logger::log("Group expected an left parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::String)
             {
-                std::cerr << "Group expected an string, got '" << token.value << "'\n";
+                Logger::log("Group expected an string, got '" + token.value + "'", LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
             group = token.value;
 
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token != GToken::RightParenthesis)
             {
-                std::cerr << "Group expected an right parenthesis, got '" << token.value << "'\n";
+                Logger::log("Group expected an right parenthesis, got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
         }
         else
         {
-            std::cerr << "Unknown flag, got '" << token.value << "'\n";
+            Logger::log("Unknown flag, got '" + token.value + "'", LogLevel::Error,
+                        token_stream.get_filename(), token.line);
             exit(1);
         }
 

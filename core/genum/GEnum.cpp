@@ -1,23 +1,24 @@
 #include "GEnum.h"
 
-GEnumOptions::GEnumOptions(std::queue<TokenValue> &tokens)
-{
-    TokenValue token;
+#include <helpers/logger.h>
 
-    if (tokens.front().token != GToken::LeftParenthesis)
+GEnumOptions::GEnumOptions(TokenStream &token_stream)
+{
+    TokenValue token = token_stream.next();
+
+    if (token.token != GToken::LeftParenthesis)
     {
-        std::cerr << "Options expected left parenthesis, got '" << tokens.front().value << "'\n";
+        Logger::log("GEnum options expected left parenthesis, got '" + token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
     bool not_first = false;
 
     // Reading Options
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::RightParenthesis)
         {
@@ -28,16 +29,17 @@ GEnumOptions::GEnumOptions(std::queue<TokenValue> &tokens)
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "Options expected ','\n";
+                Logger::log("GEnum options expected ','", LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
         }
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "Options expected identifier, got '" << token.value << "'\n";
+            Logger::log("GEnum options expected identifier, got '" + token.value + "'",
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
 
@@ -45,46 +47,47 @@ GEnumOptions::GEnumOptions(std::queue<TokenValue> &tokens)
     }
 }
 
-GEnum::GEnum(std::queue<TokenValue> &tokens)
+GEnum::GEnum(TokenStream &token_stream)
 {
-    options = GEnumOptions(tokens);
+    options = GEnumOptions(token_stream);
 
-    TokenValue token;
+    TokenValue token = token_stream.next();
 
-    if (tokens.front().token != GToken::Enum)
+    if (token.token != GToken::Enum)
     {
-        std::cerr << "GEnum expected 'enum'";
+        Logger::log("GEnum expected 'enum', got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
-    token = tokens.front();
+    token = token_stream.next();
+
     if (token.token == GToken::Class)
     {
-        tokens.pop();
-        token = tokens.front();
+        token = token_stream.next();
     }
 
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GEnum expected an identifier\n";
+        Logger::log("GEnum expected an identifier, got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
     name = token.value;
-    tokens.pop();
 
-    if (tokens.front().token != GToken::LeftCurlyBrace)
+    token = token_stream.next();
+
+    if (token.token != GToken::LeftCurlyBrace)
     {
-        std::cerr << "GEnum expected '{'";
+        Logger::log("GEnum expected '{', got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
-    while (!tokens.empty())
+    token = token_stream.next();
+    while (!token_stream.empty())
     {
         GEnum::EnumValue enumValue = {};
-        token = tokens.front();
-        tokens.pop();
 
         if (token.token == GToken::RightCurlyBrace)
         {
@@ -95,11 +98,11 @@ GEnum::GEnum(std::queue<TokenValue> &tokens)
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "GEnum expected ',', got " << token.value << "\n";
+                Logger::log("GEnum expected ',', got '" + token.value + "'", LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
 
             if (token.token == GToken::RightCurlyBrace)
             {
@@ -109,24 +112,25 @@ GEnum::GEnum(std::queue<TokenValue> &tokens)
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "GEnum expected an identifier, got " << token.value << "\n";
+            Logger::log("GEnum expected an identifier, got '" + token.value + "'", LogLevel::Error,
+                        token_stream.get_filename(), token.line);
             exit(1);
         }
-
         enumValue.name = token.value;
-        token = tokens.front();
+
+        token = token_stream.next();
 
         if (token.token == GToken::Equal)
         {
-            tokens.pop();
-            token = tokens.front();
+            token = token_stream.next();
 
             if (token.token != GToken::Integer)
             {
-                std::cerr << "GEnum expected an integer\n";
+                Logger::log("GEnum expected an integer, got '" + token.value + "'", LogLevel::Error,
+                            token_stream.get_filename(), token.line);
+                exit(1);
             }
             enumValue.value = std::stoi(token.value);
-            tokens.pop();
         }
 
         values.push_back(enumValue);

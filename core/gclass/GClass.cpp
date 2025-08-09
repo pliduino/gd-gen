@@ -1,23 +1,24 @@
 #include "GClass.h"
 
-GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
-{
-    TokenValue token;
+#include <helpers/logger.h>
 
-    if (tokens.front().token != GToken::LeftParenthesis)
+GClassOptions::GClassOptions(TokenStream &token_stream)
+{
+    TokenValue token = token_stream.next();
+
+    if (token.token != GToken::LeftParenthesis)
     {
-        std::cerr << "Options expected left parenthesis, got '" << tokens.front().value << "'\n";
+        Logger::log("Options expected left parenthesis, got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
     bool not_first = false;
 
     // Reading Options
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::RightParenthesis)
         {
@@ -28,16 +29,17 @@ GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "Options expected ','\n";
+                Logger::log("GClass options expected ','", LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
         }
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "Options expected identifier, got '" << token.value << "'\n";
+            Logger::log("GClass options expected identifier, got '" + token.value + "'",
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
 
@@ -53,8 +55,9 @@ GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
         {
             if (class_type != GClassType::Base)
             {
-                std::cerr << "Class can't be " << get_class_type_string(GClassType::Virtual) << " and "
-                          << get_class_type_string(class_type) << " at the same time\n";
+                Logger::log("Class can't be " + get_class_type_string(GClassType::Virtual) +
+                                " and " + get_class_type_string(class_type) + " at the same time",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
             class_type = GClassType::Virtual;
@@ -63,8 +66,9 @@ GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
         {
             if (class_type != GClassType::Base)
             {
-                std::cerr << "Class can't be " << get_class_type_string(GClassType::Abstract) << " and "
-                          << get_class_type_string(class_type) << " at the same time\n";
+                Logger::log("Class can't be " + get_class_type_string(GClassType::Abstract) +
+                                " and " + get_class_type_string(class_type) + " at the same time",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
             class_type = GClassType::Abstract;
@@ -73,8 +77,9 @@ GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
         {
             if (class_type != GClassType::Base)
             {
-                std::cerr << "Class can't be " << get_class_type_string(GClassType::Runtime) << " and "
-                          << get_class_type_string(class_type) << " at the same time\n";
+                Logger::log("Class can't be " + get_class_type_string(GClassType::Runtime) +
+                                " and " + get_class_type_string(class_type) + " at the same time",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
             class_type = GClassType::Runtime;
@@ -83,15 +88,17 @@ GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
         {
             if (class_type != GClassType::Base)
             {
-                std::cerr << "Class can't be " << get_class_type_string(GClassType::Internal) << " and "
-                          << get_class_type_string(class_type) << " at the same time\n";
+                Logger::log("Class can't be " + get_class_type_string(GClassType::Internal) +
+                                " and " + get_class_type_string(class_type) + " at the same time",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
             class_type = GClassType::Internal;
         }
         else
         {
-            std::cerr << "Unknown GCLASS option '" << token.value << "'\n";
+            Logger::log("Unknown GClass option '" + token.value + "'", LogLevel::Error,
+                        token_stream.get_filename(), token.line);
             exit(1);
         }
 
@@ -99,48 +106,51 @@ GClassOptions::GClassOptions(std::queue<TokenValue> &tokens)
     }
 }
 
-GClass::GClass(std::queue<TokenValue> &tokens)
+GClass::GClass(TokenStream &token_stream)
 {
-    options = GClassOptions(tokens);
+    options = GClassOptions(token_stream);
 
-    TokenValue token;
+    TokenValue token = token_stream.next();
 
-    if (tokens.front().token != GToken::Class)
+    if (token.token != GToken::Class)
     {
-        std::cerr << "GClass expected 'class'";
+        Logger::log("GClass expected 'class', got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GClass expected an identifier";
+        Logger::log("GClass expected an identifier for the class name, got '" + token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
     name = token.value;
 
-    if (tokens.front().token != GToken::Colon)
+    token = token_stream.next();
+    if (token.token != GToken::Colon)
     {
-        std::cerr << "GClass expected ':', every GClass needs to inherit something.\n";
+        Logger::log("GClass expected ':' as every GClass needs to inherit something, got '" +
+                        token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
     if (token.token != GToken::Public)
     {
-        std::cerr << "GClass expected 'public' access modifier\n";
+        Logger::log("GClass expected 'public' access modifier, got '" + token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GClass expected an identifier\n";
+        Logger::log(
+            "GClass expected an identifier for the parent class name, got '" + token.value + "'",
+            LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
     parentName = token.value;
@@ -150,14 +160,10 @@ std::string get_class_type_string(GClassType type)
 {
     switch (type)
     {
-    case GClassType::Base:
-        return "Base";
-    case GClassType::Virtual:
-        return "Virtual";
-    case GClassType::Abstract:
-        return "Abstract";
-    case GClassType::Runtime:
-        return "Runtime";
+        case GClassType::Base: return "Base";
+        case GClassType::Virtual: return "Virtual";
+        case GClassType::Abstract: return "Abstract";
+        case GClassType::Runtime: return "Runtime";
     }
     return "";
 }

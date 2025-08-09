@@ -1,16 +1,16 @@
 #pragma once
 
+#include <lexer/lexer.h>
+
+#include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
-#include <iostream>
-
-#include <parser/parser.h>
 
 struct GEnumOptions
 {
     GEnumOptions() {}
-    GEnumOptions(std::queue<TokenValue> &tokens);
+    GEnumOptions(TokenStream &token_stream);
 };
 
 struct GEnum
@@ -28,5 +28,5 @@ struct GEnum
 
     GEnum() {}
 
-    GEnum(std::queue<TokenValue> &tokens);
+    GEnum(TokenStream &token_stream);
 };

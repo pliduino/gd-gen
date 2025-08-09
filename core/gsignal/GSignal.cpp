@@ -1,21 +1,23 @@
 #include "GSignal.h"
 
-GSignalOptions::GSignalOptions(std::queue<TokenValue> &tokens)
+#include <helpers/logger.h>
+
+GSignalOptions::GSignalOptions(TokenStream &token_stream)
 {
     TokenValue token;
     bool not_first = false;
 
     // Reading Options
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::RightParenthesis)
         {
             if (!not_first)
             {
-                std::cerr << "Expect at least one option due to comma\n";
+                Logger::log("GSignal options expected at least one option due to comma",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
             break;
@@ -25,16 +27,17 @@ GSignalOptions::GSignalOptions(std::queue<TokenValue> &tokens)
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "Options expected ','\n";
+                Logger::log("GSignal options expected ',', got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
         }
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "Options expected identifier, got '" << token.value << "'\n";
+            Logger::log("GSignal options expected identifier, got '" + token.value + "'",
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
 
@@ -42,43 +45,41 @@ GSignalOptions::GSignalOptions(std::queue<TokenValue> &tokens)
     }
 }
 
-GSignal::GSignal(std::queue<TokenValue> &tokens)
+GSignal::GSignal(TokenStream &token_stream)
 {
+    TokenValue token = token_stream.next();
 
-    TokenValue token;
-
-    token = tokens.front();
-    tokens.pop();
     if (token.token != GToken::LeftParenthesis)
     {
-        std::cerr << "GSignal expected left parenthesis, got '" << token.value << "'\n";
+        Logger::log("GSignal expected left parenthesis, got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GSignal expected an identifier for name, got '" << token.value << "'\n";
+        Logger::log("GSignal expected an identifier for name, got '" + token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
     name = token.value;
 
-    arguments = GArgument::read_garguments(tokens);
+    arguments = GArgument::read_garguments(token_stream);
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
 
     if (token.token == GToken::RightParenthesis)
     {
         return;
     }
 
-    if (token.token != GToken::Colon)
+    if (token.token != GToken::Comma)
     {
-        std::cerr << "GSignal expected ','";
+        Logger::log("GSignal expected ',', got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
 
-    options = GSignalOptions(tokens);
+    options = GSignalOptions(token_stream);
 }

@@ -1,15 +1,11 @@
 #pragma once
 
-#include <iostream>
-
-#include <parser/parser.h>
-
 #include <core/gproperty/GProperty.h>
 
 struct GStructOptions
 {
     GStructOptions() {}
-    GStructOptions(std::queue<TokenValue> &tokens);
+    GStructOptions(TokenStream &token_stream);
 };
 
 struct GStruct
@@ -19,5 +15,5 @@ struct GStruct
     GStructOptions options;
 
     GStruct() {}
-    GStruct(std::queue<TokenValue> &tokens);
+    GStruct(TokenStream &token_stream);
 };
