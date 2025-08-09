@@ -14,11 +14,9 @@ constexpr bool is_valid_gstruct_flag(const char *flag)
 
     for (size_t i = 0; i < num_valid; ++i)
     {
-        if (str_equal(flag, valid_flags[i]))
-            return true;
+        if (str_equal(flag, valid_flags[i])) return true;
     }
-    if (starts_with(flag, "Description("))
-        return true;
+    if (starts_with(flag, "Description(")) return true;
 
     return false;
 }
@@ -28,5 +26,4 @@ constexpr bool is_valid_gstruct_flag(const char *flag)
 
 #define VALIDATE_EACH_GSTRUCT_FLAG(...) FOR_EACH(CHECK_GSTRUCT_FLAG, SEMICOLON_END, __VA_ARGS__);
 
-#define GSTRUCT(...) \
-    VALIDATE_EACH_GSTRUCT_FLAG(__VA_ARGS__);
+#define GSTRUCT(...) VALIDATE_EACH_GSTRUCT_FLAG(__VA_ARGS__);

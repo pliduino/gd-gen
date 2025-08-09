@@ -2,3 +2,4 @@
 **/*.exe
 **/*.dblite
 .vscode
+.VSCodeCounter

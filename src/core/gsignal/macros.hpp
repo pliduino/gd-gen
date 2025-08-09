@@ -14,8 +14,7 @@ constexpr bool is_valid_gsignal_flag(const char *flag)
 
     for (size_t i = 0; i < num_valid; ++i)
     {
-        if (str_equal(flag, valid_flags[i]))
-            return true;
+        if (str_equal(flag, valid_flags[i])) return true;
     }
 
     return false;

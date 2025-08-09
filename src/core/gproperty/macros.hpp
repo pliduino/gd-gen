@@ -14,25 +14,24 @@ constexpr bool is_valid_gproperty_flag(const char *flag)
 
     for (size_t i = 0; i < num_valid; ++i)
     {
-        if (str_equal(flag, valid_flags[i]))
-            return true;
+        if (str_equal(flag, valid_flags[i])) return true;
     }
-    if (starts_with(flag, "Description(")) // TODO: Validate string
+    if (starts_with(flag, "Description("))  // TODO: Validate string
         return true;
 
-    if (starts_with(flag, "ShowIf(")) // TODO: Validate statement
+    if (starts_with(flag, "ShowIf("))  // TODO: Validate statement
         return true;
 
-    if (starts_with(flag, "Getter(")) // TODO: Validate statement
+    if (starts_with(flag, "Getter("))  // TODO: Validate statement
         return true;
 
-    if (starts_with(flag, "Setter(")) // TODO: Validate statement
+    if (starts_with(flag, "Setter("))  // TODO: Validate statement
         return true;
 
-    if (starts_with(flag, "Range(")) // TODO: Validate values
+    if (starts_with(flag, "Range("))  // TODO: Validate values
         return true;
 
-    if (starts_with(flag, "Group(")) // TODO: Validate value
+    if (starts_with(flag, "Group("))  // TODO: Validate value
         return true;
 
     return false;
@@ -43,5 +42,4 @@ constexpr bool is_valid_gproperty_flag(const char *flag)
 
 #define VALIDATE_EACH_GPROPERTY_FLAG(...) FOR_EACH(CHECK_GPROPERTY_FLAG, SEMICOLON_END, __VA_ARGS__)
 
-#define GPROPERTY(...) \
-    VALIDATE_EACH_GPROPERTY_FLAG(__VA_ARGS__)
+#define GPROPERTY(...) VALIDATE_EACH_GPROPERTY_FLAG(__VA_ARGS__)

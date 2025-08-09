@@ -3,7 +3,7 @@ import sys
 
 env = Environment(CPPDEFINES=[],
                 LIBS=[],
-                CPPPATH="./",
+                CPPPATH="./src",
                 CXXFLAGS="/std:c++20",
                 )
 
@@ -18,7 +18,7 @@ def AllSources(node='.', pattern='*.cpp'):
     ]
     return result
 
-sources = AllSources("./", "*.cpp")
+sources = AllSources("./src", "*.cpp")
 
 program = env.Program("gd-gen", sources)
 Return("program")
