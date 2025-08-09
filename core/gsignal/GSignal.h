@@ -1,15 +1,15 @@
 #pragma once
 
-#include <iostream>
-
-#include <core/gproperty/GProperty.h>
 #include <core/general/GArgument.h>
+#include <core/gproperty/GProperty.h>
+
+#include <iostream>
 
 struct GSignalOptions
 {
     GSignalOptions() {}
 
-    GSignalOptions(std::queue<TokenValue> &tokens);
+    GSignalOptions(TokenStream &token_stream);
 };
 
 struct GSignal
@@ -19,5 +19,5 @@ struct GSignal
     GSignalOptions options;
 
     GSignal() {}
-    GSignal(std::queue<TokenValue> &tokens);
+    GSignal(TokenStream &token_stream);
 };

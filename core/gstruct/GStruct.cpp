@@ -1,23 +1,24 @@
 #include "GStruct.h"
 
-GStructOptions::GStructOptions(std::queue<TokenValue> &tokens)
-{
-    TokenValue token;
+#include <helpers/logger.h>
 
-    if (tokens.front().token != GToken::LeftParenthesis)
+GStructOptions::GStructOptions(TokenStream &token_stream)
+{
+    TokenValue token = token_stream.next();
+
+    if (token.token != GToken::LeftParenthesis)
     {
-        std::cerr << "Options expected left parenthesis, got '" << tokens.front().value << "'\n";
+        Logger::log("GStruct options expected left parenthesis, got '" + token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
     bool not_first = false;
 
     // Reading Options
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::RightParenthesis)
         {
@@ -28,16 +29,17 @@ GStructOptions::GStructOptions(std::queue<TokenValue> &tokens)
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "Options expected ','\n";
+                Logger::log("GStruct options expected ',', got '" + token.value + "'",
+                            LogLevel::Error, token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
         }
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "Options expected identifier, got '" << token.value << "'\n";
+            Logger::log("GStruct options expected identifier, got '" + token.value + "'",
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
 
@@ -45,41 +47,41 @@ GStructOptions::GStructOptions(std::queue<TokenValue> &tokens)
     }
 }
 
-GStruct::GStruct(std::queue<TokenValue> &tokens)
+GStruct::GStruct(TokenStream &token_stream)
 {
-    options = GStructOptions(tokens);
+    options = GStructOptions(token_stream);
 
-    TokenValue token;
+    TokenValue token = token_stream.next();
 
-    if (tokens.front().token != GToken::Struct)
+    if (token.token != GToken::Struct)
     {
-        std::cerr << "GStruct expected 'struct'";
+        Logger::log("GStruct expected 'struct', got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
-    token = tokens.front();
-    tokens.pop();
+    token = token_stream.next();
     if (token.token != GToken::Identifier)
     {
-        std::cerr << "GStruct expected an identifier";
+        Logger::log("GStruct expected an identifier, got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
     name = token.value;
 
-    if (tokens.front().token != GToken::LeftCurlyBrace)
+    token = token_stream.next();
+    if (token.token != GToken::LeftCurlyBrace)
     {
-        std::cerr << "GStruct expected '{'";
+        Logger::log("GStruct expected '{', got '" + token.value + "'", LogLevel::Error,
+                    token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
     int level = 1;
 
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::LeftCurlyBrace)
         {
@@ -95,10 +97,11 @@ GStruct::GStruct(std::queue<TokenValue> &tokens)
         }
         else if (token.token == GToken::GPROPERTY)
         {
-            properties.push_back(GProperty(tokens));
+            properties.push_back(GProperty(token_stream));
         }
     }
 
-    std::cerr << "GStruct expected '}'";
+    Logger::log("GStruct expected '}', got EOF", LogLevel::Error, token_stream.get_filename(),
+                token.line);
     exit(1);
 }

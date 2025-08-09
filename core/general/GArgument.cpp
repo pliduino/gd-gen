@@ -1,23 +1,24 @@
 #include "GArgument.h"
 
+#include <helpers/logger.h>
+
 #include <iostream>
 
-std::vector<GArgument> GArgument::read_garguments(std::queue<TokenValue> &tokens)
+std::vector<GArgument> GArgument::read_garguments(TokenStream &token_stream)
 {
     std::vector<GArgument> arguments;
-    TokenValue token;
+    TokenValue token = token_stream.next();
 
-    if (tokens.front().token != GToken::LeftParenthesis)
+    if (token.token != GToken::LeftParenthesis)
     {
-        std::cerr << "GArguments expected left parenthesis got '" << tokens.front().value << "'\n";
+        Logger::log("GArguments expected left parenthesis got '" + token.value + "'",
+                    LogLevel::Error, token_stream.get_filename(), token.line);
         exit(1);
     }
-    tokens.pop();
 
-    while (!tokens.empty())
+    while (!token_stream.empty())
     {
-        token = tokens.front();
-        tokens.pop();
+        token = token_stream.next();
 
         if (token.token == GToken::RightParenthesis)
         {
@@ -30,26 +31,27 @@ std::vector<GArgument> GArgument::read_garguments(std::queue<TokenValue> &tokens
         {
             if (token.token != GToken::Comma)
             {
-                std::cerr << "GArguments expected ','\n";
+                Logger::log("GArguments expected ',' got '" + token.value + "'", LogLevel::Error,
+                            token_stream.get_filename(), token.line);
                 exit(1);
             }
-            token = tokens.front();
-            tokens.pop();
+            token = token_stream.next();
         }
 
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "GArguments expected identifier after comma, got '" << token.value << "'\n";
+            Logger::log("GArguments expected identifier for type, got '" + token.value + "'",
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
         gArgument.raw_type = token.value;
 
         // TODO: This is copied from GPROPERTY, create a common function
-        token = tokens.front();
+        token = token_stream.next();
         if (token.token == GToken::Asterisk)
         {
             gArgument.variantType = GType::NodePathToRaw;
-            tokens.pop();
+            token = token_stream.next();
         }
         else if (gArgument.raw_type == "float" || gArgument.raw_type == "double")
         {
@@ -80,11 +82,10 @@ std::vector<GArgument> GArgument::read_garguments(std::queue<TokenValue> &tokens
             gArgument.variantType = GType::Object;
         }
 
-        token = tokens.front();
-        tokens.pop();
         if (token.token != GToken::Identifier)
         {
-            std::cerr << "GArguments expected identifier after type, got '" << token.value << "'\n";
+            Logger::log("GArguments expected identifier after type, got '" + token.value + "'",
+                        LogLevel::Error, token_stream.get_filename(), token.line);
             exit(1);
         }
         gArgument.name = token.value;

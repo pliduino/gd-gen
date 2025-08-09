@@ -1,10 +1,11 @@
 #pragma once
 
+#include <core/general/GType.h>
+#include <lexer/lexer.h>
+
+#include <queue>
 #include <string>
 #include <vector>
-#include <queue>
-#include <lexer/lexer.h>
-#include <core/general/GType.h>
 
 struct GArgument
 {
@@ -13,5 +14,5 @@ struct GArgument
     std::string name;
     bool isPointer = false;
 
-    static std::vector<GArgument> read_garguments(std::queue<TokenValue> &tokens);
+    static std::vector<GArgument> read_garguments(TokenStream &token_stream);
 };

@@ -1,11 +1,9 @@
 #pragma once
 
-#include <iostream>
-
-#include <lexer/lexer.h>
+#include <core/gfunction/GFunction.h>
 #include <core/gproperty/GProperty.h>
 #include <core/gsignal/GSignal.h>
-#include <core/gfunction/GFunction.h>
+#include <lexer/lexer.h>
 
 enum class GClassType
 {
@@ -26,7 +24,7 @@ struct GClassOptions
 
     GClassOptions() {}
 
-    GClassOptions(std::queue<TokenValue> &tokens);
+    GClassOptions(TokenStream &token_stream);
 };
 
 struct GClass
@@ -41,5 +39,5 @@ struct GClass
     GClassOptions options;
 
     GClass() {}
-    GClass(std::queue<TokenValue> &tokens);
+    GClass(TokenStream &token_stream);
 };

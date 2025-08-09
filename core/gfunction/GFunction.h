@@ -1,15 +1,15 @@
 #pragma once
 
+#include <core/general/GArgument.h>
+
 #include <string>
 #include <vector>
-
-#include <core/general/GArgument.h>
 
 struct GFunctionOptions
 {
     GFunctionOptions() {}
 
-    GFunctionOptions(std::queue<TokenValue> &tokens);
+    GFunctionOptions(TokenStream &token_stream);
 };
 
 struct GFunction
@@ -25,5 +25,5 @@ struct GFunction
     GFunctionOptions options;
 
     GFunction() {}
-    GFunction(std::queue<TokenValue> &tokens);
+    GFunction(TokenStream &token_stream);
 };
