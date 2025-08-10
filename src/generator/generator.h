@@ -412,9 +412,9 @@ class Generator
 
         // Properties are not registered for the editor here, that is done in
         // the _get_property_list for finer control
-        std::string property_info =
+        PropertyInfo property_info =
             generate_property_info(property, grouping, final_property_name, _class);
-        GeneratedFile << "ADD_PROPERTY(" << property_info << ", \"";
+        GeneratedFile << "ADD_PROPERTY(" << property_info.gdscript_property_info << ", \"";
 
         if (property.options.custom_setter.empty())
         {
@@ -434,14 +434,40 @@ class Generator
             GeneratedFile << property.options.custom_getter << "\");\\\n";
         }
 
-        if (grouping.empty() && accessor.empty())
+        if (grouping.empty() && accessor.empty() && property.options.group.empty())
         {
             return;
         }
+
+        GeneratedFile << "ADD_PROPERTY(" << property_info.editor_property_info << ", \"";
+
+        if (property.options.custom_setter.empty())
+        {
+            GeneratedFile << "set_" << final_property_name << "\", \"";
+        }
+        else
+        {
+            GeneratedFile << property.options.custom_setter << "\", \"";
+        }
+
+        if (property.options.custom_getter.empty())
+        {
+            GeneratedFile << "get_" << final_property_name << "\");\\\n";
+        }
+        else
+        {
+            GeneratedFile << property.options.custom_getter << "\");\\\n";
+        }
     }
 
-    std::string generate_property_info(GProperty &property, std::string nested_group,
-                                       std::string final_property_name, GClass class_)
+    struct PropertyInfo
+    {
+        std::string gdscript_property_info;  // Without / grouping
+        std::string editor_property_info;    // With / grouping
+    };
+
+    PropertyInfo generate_property_info(GProperty &property, std::string nested_group,
+                                        std::string final_property_name, GClass class_)
     {
         std::string hints = generate_property_hints(property);
         std::string usage = generate_property_usage(property);
@@ -486,7 +512,7 @@ class Generator
                                                    usage + "|PROPERTY_USAGE_EDITOR));\\\n";
         }
 
-        return property_info_no_grouping;
+        return {property_info_no_grouping, property_info_grouping + "PROPERTY_USAGE_NONE)"};
     }
 
    public:
@@ -666,6 +692,17 @@ class Generator
                 GeneratedFile << "}\\\n";
 
                 GeneratedFile << "\n#define " << _class.name << "_GENERATED_BINDINGS() ";
+
+                for (auto function : _class.functions)
+                {
+                    GeneratedFile << "ClassDB::bind_method(D_METHOD(\"" << function.name << "\"";
+                    for (auto &argument : function.arguments)
+                    {
+                        GeneratedFile << ", \"" << argument.name << "\"";
+                    }
+                    GeneratedFile << "), &" << _class.name << "::" << function.name << ");\\\n";
+                }
+
                 for (auto property : _class.properties)
                 {
                     generate_property_bindings(property, GeneratedFile, _class);
@@ -681,16 +718,6 @@ class Generator
                             << ", \"" << argument.name << "\")";
                     }
                     GeneratedFile << "));\\\n";
-                }
-
-                for (auto function : _class.functions)
-                {
-                    GeneratedFile << "ClassDB::bind_method(D_METHOD(\"" << function.name << "\"";
-                    for (auto &argument : function.arguments)
-                    {
-                        GeneratedFile << ", \"" << argument.name << "\"";
-                    }
-                    GeneratedFile << "), &" << _class.name << "::" << function.name << ");\\\n";
                 }
 
                 GeneratedFile << "(void)0\n\n";

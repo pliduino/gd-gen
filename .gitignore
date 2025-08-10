@@ -3,3 +3,6 @@
 **/*.dblite
 .vscode
 .VSCodeCounter
+example_project/godot-cpp
+example_project/generated
+example_project

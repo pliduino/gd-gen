@@ -136,6 +136,10 @@ IfMacros:
   - KJ_IF_MAYBE
 IncludeBlocks: Regroup
 IncludeCategories:
+  - Regex: .*\.generated\.h
+    Priority: 4
+    SortPriority: 0
+    CaseSensitive: false
   - Regex: ^<ext/.*\.h>
     Priority: 2
     SortPriority: 0
