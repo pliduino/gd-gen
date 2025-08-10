@@ -269,19 +269,19 @@ class Generator
             GeneratedFile << "void generated_set_" << sanitized_property_name << "("
                           << property.rawType << pointer_accessor << " value" << "){\\\n\t"
                           << final_property_accessor << " = value;\\\n";
-        }
 
-        if (_class.parentName != "Resource" && !_class.options.is_resource &&
-            _class.parentName != "Object" && property.options.isRequired &&
-            property.variantType == GType::Resource)
-        {
-            GeneratedFile << "\tupdate_configuration_warnings();\\\n";
-            requirements += "if (!" + final_property_accessor +
-                            ".is_valid()) { array.append(\"Missing " + sanitized_property_name +
-                            "\"); }\\\n";
-        }
+            if (_class.parentName != "Resource" && !_class.options.is_resource &&
+                _class.parentName != "Object" && property.options.isRequired &&
+                property.variantType == GType::Resource)
+            {
+                GeneratedFile << "\tupdate_configuration_warnings();\\\n";
+                requirements += "if (!" + final_property_accessor +
+                                ".is_valid()) { array.append(\"Missing " + sanitized_property_name +
+                                "\"); }\\\n";
+            }
 
-        GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
+            GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
+        }
     }
 
     std::string generate_property_hints(GProperty &property)
