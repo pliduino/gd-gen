@@ -666,6 +666,17 @@ class Generator
                 GeneratedFile << "}\\\n";
 
                 GeneratedFile << "\n#define " << _class.name << "_GENERATED_BINDINGS() ";
+
+                for (auto function : _class.functions)
+                {
+                    GeneratedFile << "ClassDB::bind_method(D_METHOD(\"" << function.name << "\"";
+                    for (auto &argument : function.arguments)
+                    {
+                        GeneratedFile << ", \"" << argument.name << "\"";
+                    }
+                    GeneratedFile << "), &" << _class.name << "::" << function.name << ");\\\n";
+                }
+
                 for (auto property : _class.properties)
                 {
                     generate_property_bindings(property, GeneratedFile, _class);
@@ -681,16 +692,6 @@ class Generator
                             << ", \"" << argument.name << "\")";
                     }
                     GeneratedFile << "));\\\n";
-                }
-
-                for (auto function : _class.functions)
-                {
-                    GeneratedFile << "ClassDB::bind_method(D_METHOD(\"" << function.name << "\"";
-                    for (auto &argument : function.arguments)
-                    {
-                        GeneratedFile << ", \"" << argument.name << "\"";
-                    }
-                    GeneratedFile << "), &" << _class.name << "::" << function.name << ");\\\n";
                 }
 
                 GeneratedFile << "(void)0\n\n";
