@@ -1,8 +1,8 @@
 #pragma once
 
-../../
+#include "../../macro_helpers.hpp"
 
-    constexpr bool is_valid_gstruct_flag(const char *flag)
+constexpr bool is_valid_gstruct_flag(const char *flag)
 {
     constexpr const char *valid_flags[] = {
         "Required",
