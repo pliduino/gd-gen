@@ -1,6 +1,6 @@
 #pragma once
 
-#include "macro_helpers.hpp"
+#include "../../macro_helpers.hpp"
 
 namespace GDGenInternal
 {
