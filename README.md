@@ -17,6 +17,8 @@
 
 ## 🚀 Getting Started
 
+Before continuing with the manual steps below, consider using [gd-gen-setup](https://github.com/pliduino/gd-gen-setup) for a quick and automated project setup.
+
 1. **Install**
    Clone this repository to your project folder, it has scons so just compile as normal with "scons".
 
