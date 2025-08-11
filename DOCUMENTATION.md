@@ -32,6 +32,10 @@ Registers a property inside the class.
 > ⚠️ **Note:** The methods used in `Getter` and `Setter` must be registered using `GFUNCTION(...)`,
 > or manually bound using `ClassDB::bind_method`, otherwise the property binding **will not work**.
 
+> ⚠️ **Node properties should be read with get_xxx(), otherwise the node won't initialize, this is due to them being serialized
+> as paths**. Theoretically after calling get once it will be set already, just be careful if you destroy any nodes, the pointer won't get
+> updated to null unless you manually do so.
+
 ---
 
 ### 🟡 `GENUM()`
