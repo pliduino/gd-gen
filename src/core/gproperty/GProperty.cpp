@@ -117,6 +117,10 @@ GPropertyOptions::GPropertyOptions(TokenStream &token_stream)
         {
             noStorage = true;
         }
+        else if (token.value == "ReadOnly")
+        {
+            readOnly = true;
+        }
         else if (token.value == "Description")
         {
             token = token_stream.next();

@@ -19,6 +19,9 @@ struct GPropertyOptions
     bool hideInInspector = false;
     bool noStorage = false;
     bool multiline_text = false;
+    bool readOnly = false;
+    // std::string editable_if;
+
     std::string description;
     std::string show_if;
     std::string custom_getter;

@@ -4,12 +4,8 @@
 
 constexpr bool is_valid_gproperty_flag(const char *flag)
 {
-    constexpr const char *valid_flags[] = {
-        "Required",
-        "NoStorage",
-        "HideInInspector",
-        "MultilineText",
-    };
+    constexpr const char *valid_flags[] = {"Required", "NoStorage", "HideInInspector",
+                                           "MultilineText", "Readonly"};
     constexpr size_t num_valid = sizeof(valid_flags) / sizeof(valid_flags[0]);
 
     for (size_t i = 0; i < num_valid; ++i)
@@ -33,6 +29,9 @@ constexpr bool is_valid_gproperty_flag(const char *flag)
 
     if (starts_with(flag, "Group("))  // TODO: Validate value
         return true;
+
+    // if (starts_with(flag, "EditableIf("))  // TODO: Validate value
+    //     return true;
 
     return false;
 }
