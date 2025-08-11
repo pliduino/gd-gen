@@ -28,6 +28,7 @@ Registers a property inside the class.
 - `Setter(setter)` — Uses the specified method name as the property's setter.
 - `Range(min, max, step)` - Same as hint range, step is optional. Available for both floats and ints
 - `Group("MyGroup/MySubgroup/MySubSubGroup")` - Organizes the property under nested group categories in the inspector. Groups and subgroups are separated by /.
+- `ReadOnly` - Sets the property as read only in the inspector.
 
 > ⚠️ **Note:** The methods used in `Getter` and `Setter` must be registered using `GFUNCTION(...)`,
 > or manually bound using `ClassDB::bind_method`, otherwise the property binding **will not work**.
