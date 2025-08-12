@@ -536,9 +536,9 @@ class Generator
             GeneratedFile generatedFile;
             generatedFile.src_path = file;
 
-            Parser parser(file);
+            Lexer lexer(file);
 
-            TokenStream token_stream = parser.parse();
+            TokenStream token_stream = lexer.parse();
 
             bool should_generate = false;
 

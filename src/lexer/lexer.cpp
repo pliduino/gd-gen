@@ -156,7 +156,7 @@ const SpecialChars special_chars[255] = {
     SpecialChars::Empty              // 127: DEL (Delete)
 };
 
-inline void Parser::ignore_until_newline()
+inline void Lexer::ignore_until_newline()
 {
     char c;
     while (file.get(c))
@@ -169,7 +169,7 @@ inline void Parser::ignore_until_newline()
     }
 }
 
-inline void Parser::ignore_until_end_comment()
+inline void Lexer::ignore_until_end_comment()
 {
     char c;
     while (file.get(c))
@@ -185,7 +185,7 @@ inline void Parser::ignore_until_end_comment()
     }
 }
 
-inline TokenValue Parser::read_string()
+inline TokenValue Lexer::read_string()
 {
     std::string str;
     char c;
@@ -209,7 +209,7 @@ inline TokenValue Parser::read_string()
     exit(1);
 }
 
-inline TokenValue Parser::read_identifier()
+inline TokenValue Lexer::read_identifier()
 {
     std::string str;
     char c;
@@ -372,7 +372,7 @@ inline TokenValue Parser::read_identifier()
     };
 }
 
-inline TokenValue Parser::read_number()
+inline TokenValue Lexer::read_number()
 {
     std::string str;
     GToken token_type = GToken::Integer;
@@ -407,7 +407,7 @@ inline TokenValue Parser::read_number()
     };
 }
 
-TokenStream Parser::parse()
+TokenStream Lexer::parse()
 {
     std::queue<TokenValue> tokens;
     std::string value;
@@ -491,41 +491,4 @@ TokenStream Parser::parse()
         }
     }
     return TokenStream(tokens, file_name);
-}
-
-std::string GTokenToString(GToken token)
-{
-    switch (token)
-    {
-        case GToken::Invalid: return "Invalid";
-        case GToken::GFUNCTION: return "GFUNCTION";
-        case GToken::GPROPERTY: return "GPROPERTY";
-        case GToken::GCLASS: return "GCLASS";
-        case GToken::Class: return "Class";
-        case GToken::Identifier: return "Identifier";
-        case GToken::Const: return "Const";
-        case GToken::Pointer: return "Pointer";
-        case GToken::LeftParenthesis: return "LeftParenthesis";
-        case GToken::Float: return "Float";
-        case GToken::RightParenthesis: return "RightParenthesis";
-        case GToken::LeftCurlyBrace: return "LeftCurlyBrace";
-        case GToken::RightCurlyBrace: return "RightCurlyBrace";
-        case GToken::Colon: return "Colon";
-        case GToken::String: return "String";
-        case GToken::Asterisk: return "Asterisk";
-        case GToken::Comma: return "Comma";
-        case GToken::GENERATED_BODY: return "GENERATED_BODY";
-        case GToken::Public: return "Public";
-        case GToken::Private: return "Private";
-        case GToken::Protected: return "Protected";
-        case GToken::Integer: return "Number";
-        case GToken::Equal: return "Equal";
-        case GToken::Struct: return "Struct";
-        case GToken::GSTRUCT: return "GSTRUCT";
-        case GToken::GENUM: return "GENUM";
-        case GToken::GSIGNAL: return "GSIGNAL";
-        case GToken::Enum: return "Enum";
-        case GToken::Inline: return "Inline";
-        default: return "Unknown";
-    }
 }
