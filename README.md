@@ -39,7 +39,7 @@ Before continuing with the manual steps below, consider using [GD-Gen Easy Setup
 
 ---
 
-## 📦 Example
+## Example
 
 Before:
 
@@ -103,6 +103,6 @@ Modified MIT License. See [LICENSE](./LICENSE) for more details.
 
 ---
 
-## 💬 Contact
+## Contact
 
 Questions or ideas? Open an issue or contact [pliduino](https://github.com/pliduino).
