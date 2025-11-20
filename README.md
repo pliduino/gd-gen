@@ -6,21 +6,19 @@
 
 ---
 
-## ✨ Features
+## Features
 
-- ✅ Automatic generation of C++ boilerplate for Godot
-- ✅ Similar to UE5's reflection system, but adapted for Godot
-- ✅ Reduces manual code and improves consistency
-- ✅ Integrates cleanly with Godot's GDExtension workflow
+- Automatic generation of C++ boilerplate for Godot
+- Similar to UE5's reflection system, but adapted for Godot
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 Before continuing with the manual steps below, consider using [GD-Gen Easy Setup](https://github.com/pliduino/gd-gen-easy-setup) for a quick and automated project setup.
 
 1. **Install**
-   Clone this repository to your project folder, it has scons so just compile as normal with "scons".
+   Clone this repository to your project folder, it uses scons so just compile as normal with "scons".
 
    ```bash
    git clone https://github.com/pliduino/gd-gen.git
@@ -37,7 +35,7 @@ Before continuing with the manual steps below, consider using [GD-Gen Easy Setup
    - Boilerplate headers and source files are generated automatically.
    - Naming, property registration, and signal declarations handled for you.
    - Remember to call GENERATED_BODY() inside the class and include <generated/myclass.generated.h>
-   - There's also a generated register_types file, also add it and add the macro GENERATED_TYPES() to initialize_xxx_module
+   - There's also a generated register_types file, also add it and add the macro GENERATED_TYPES() to initialize_<your_module>_module
 
 ---
 
@@ -87,19 +85,19 @@ All you need to do is remember to add the proper GCLASS/GPROPERTY/GENUM/GSIGNAL/
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 [DOCUMENTATION](./DOCUMENTATION.md)
 
 ---
 
-## 🧪 Development Status
+## Development Status
 
 This project is under active development. Contributions and feedback are welcome!
 
 ---
 
-## 📄 License
+## License
 
 Modified MIT License. See [LICENSE](./LICENSE) for more details.
 
