@@ -6,11 +6,15 @@ Registers a class with Godot.
 
 **Modifiers:**
 - `Resource` — Forces the class to be treated as a `Resource` (useful if detection fails — report as a bug if needed).
+- `Node` — Forces the class to be treated as a `Node` (useful if detection fails — report as a bug if needed).
 - `CustomBindings` — Enables a `custom_bind_methods()` function for manual binding access.
 - `Virtual` — Marks the class as virtual; it won't be instantiable from scripts or the editor.
 - `Abstract` — Prevents direct instantiation of the class entirely, including in C++ (must be subclassed).
 - `Runtime` — Registers the class only at runtime; it won't be exposed to the editor or serialized.
 - `Internal` — Hides the class from the editor and scripting APIs; useful for engine-only or implementation-detail types.
+
+> ⚠️ **Note:** Node classes automatically create a _ready() function to check for required properties and
+> to populate node pointers. Instead create a void ready() function, the generator will automatically call it.
 
 ---
 
@@ -32,9 +36,10 @@ Registers a property inside the class.
 > ⚠️ **Note:** The methods used in `Getter` and `Setter` must be registered using `GFUNCTION(...)`,
 > or manually bound using `ClassDB::bind_method`, otherwise the property binding **will not work**.
 
-> ⚠️ **Node properties should be read with get_xxx(), otherwise the node won't initialize, this is due to them being serialized
-> as paths**. Theoretically after calling get once it will be set already, just be careful if you destroy any nodes, the pointer won't get
-> updated to null unless you manually do so.
+> ⚠️ **Node properties are saved as paths and the pointers are automatically loaded before the ready() function is called.**. 
+> Be careful if you destroy any nodes, the pointer won't get updated to null unless you manually do so.
+> If the node is not marked as `Required` the pointer may be set to null on load.
+> There's a generated property called `<node_name>_path` that stores the serialized path.
 
 ---
 

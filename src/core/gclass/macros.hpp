@@ -9,7 +9,7 @@ constexpr bool is_valid_gclass_flag() { return true; }
 constexpr bool is_valid_gclass_flag(const char *flag)
 {
     constexpr const char *valid_flags[] = {
-        "CustomBindings", "Resource", "Virtual", "Abstract", "Runtime", "Internal",
+        "CustomBindings", "Resource", "Node", "Virtual", "Abstract", "Runtime", "Internal",
     };
     constexpr size_t num_valid = sizeof(valid_flags) / sizeof(valid_flags[0]);
 

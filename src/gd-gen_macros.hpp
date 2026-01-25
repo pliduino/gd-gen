@@ -2,13 +2,14 @@
 
 // Meant to be included in generated files
 
+#include "./macro_helpers.hpp"
 #include "core/gclass/macros.hpp"
 #include "core/genum/macros.hpp"
 #include "core/gfunction/macros.hpp"
 #include "core/gproperty/macros.hpp"
 #include "core/gsignal/macros.hpp"
 #include "core/gstruct/macros.hpp"
-#include "macro_helpers.hpp"
+#include <godot_cpp/classes/engine.hpp>
 
 #define GODOT_GENERATOR_GLUE_(A, B) A##_##B
 #define GODOT_GENERATOR_GLUE(A, B) GODOT_GENERATOR_GLUE_(A, B)

@@ -19,6 +19,7 @@ std::string get_class_type_string(GClassType type);
 struct GClassOptions
 {
     bool is_resource = false;
+    bool is_node = false;
     bool custom_bindings = false;
     GClassType class_type = GClassType::Base;
 
@@ -35,6 +36,7 @@ struct GClass
     std::vector<GSignal> signals;
     std::vector<GProperty> properties;
     std::vector<GFunction> functions;
+    bool has_ready_override;
     unsigned int generator_line;
     GClassOptions options;
 

@@ -64,6 +64,12 @@ class TokenStream
         return token;
     }
 
+    TokenValue peek()
+    {
+        TokenValue token = tokens.front();
+        return token;
+    }
+
     bool empty() { return tokens.empty(); }
 
     std::string get_filename() { return this->filename; }

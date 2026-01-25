@@ -51,6 +51,9 @@ GClassOptions::GClassOptions(TokenStream &token_stream)
         {
             custom_bindings = true;
         }
+        else if (token.value == "Node") {
+            is_node = true;
+        }
         else if (token.value == "Virtual")
         {
             if (class_type != GClassType::Base)

@@ -169,7 +169,7 @@ class Generator
     inline void add_enum(GEnum gEnum) { enums[gEnum.name] = gEnum; }
 
     void generate_property_getset(const GProperty &property, std::ofstream &GeneratedFile,
-                                  std::string &core_functions, std::string &requirements,
+                                  std::string &core_functions, std::string &requirements, std::string &ready_function,
                                   const GClass &_class, std::string accessor = "")
     {
         const auto &struct_ = structs.find(property.rawType);
@@ -178,7 +178,7 @@ class Generator
             for (auto struct_property : struct_->second.properties)
             {
                 generate_property_getset(struct_property, GeneratedFile, core_functions,
-                                         requirements, _class, accessor + property.name + ".");
+                                         requirements, ready_function, _class, accessor + property.name + ".");
             }
             return;
         }
@@ -212,17 +212,21 @@ class Generator
         if (property.variantType == GType::NodePathToRaw)
         {
             core_functions +=
-                "private:\\\nNodePath " + sanitized_property_name + "_path;\\\npublic:\\\n";
+                "private:\\\nNodePath " + sanitized_property_name + "_path;\\\n";
+
+            ready_function += final_property_accessor + " = Object::cast_to<" +
+                              property.rawType + ">(get_node_or_null(" +
+                              sanitized_property_name + "_path));\\\n";
+
+            if (property.options.isRequired) {
+                ready_function += "if(unlikely(" + final_property_accessor +
+                    " == nullptr)) {\\\n::godot::_err_print_error(FUNCTION_STR, __FILE__, __LINE__, \"Parameter \\\""
+                    + final_property_accessor
+                    + "\\\" is null.\");\\\n::godot::_err_flush_stdout();\\\nGENERATE_TRAP();\\\n}\\\n";
+            }
 
             if (generate_get)
             {
-                core_functions += property.rawType + " *get_" + sanitized_property_name +
-                                  "(){\\\n\tif(" + final_property_accessor + " == nullptr) { " +
-                                  final_property_accessor + " = Object::cast_to<" +
-                                  property.rawType + ">(get_node_or_null(" +
-                                  sanitized_property_name + "_path)); }\\\n\treturn " +
-                                  final_property_accessor + ";\\\n}\\\n";
-
                 GeneratedFile << "NodePath generated_get_" << sanitized_property_name
                               << "(){\\\n\treturn " << final_property_accessor << "_path;\\\n}\\\n";
             }
@@ -231,8 +235,9 @@ class Generator
             {
                 GeneratedFile << "void generated_set_" << sanitized_property_name
                               << "(NodePath value){\\\n\t" << sanitized_property_name
-                              << "_path = value;\\\n\t" << final_property_accessor
-                              << " = nullptr;\\\n";
+                              << "_path = value;\\\n\t" << final_property_accessor << " = Object::cast_to<" +
+                                                property.rawType + ">(get_node_or_null(" +
+                                                sanitized_property_name + "_path));\\\n";
             }
 
             if (_class.parentName != "Resource" && !_class.options.is_resource &&
@@ -278,6 +283,10 @@ class Generator
                 requirements += "if (!" + final_property_accessor +
                                 ".is_valid()) { array.append(\"Missing " + sanitized_property_name +
                                 "\"); }\\\n";
+                ready_function += "if(unlikely(!"+ final_property_accessor + ".is_valid())) {\\\n\
+                    ::godot::_err_print_error(FUNCTION_STR, __FILE__, __LINE__, \"Parameter \\\"" +
+                    final_property_accessor + "\\\" is invalid.\");\\\n::godot::_err_flush_stdout();\\\n\
+                    GENERATE_TRAP();\\\n}";
             }
 
             GeneratedFile << "notify_property_list_changed();\\\n}\\\n";
@@ -567,6 +576,21 @@ class Generator
                     case GToken::GFUNCTION:
                         classes.back().functions.push_back(GFunction(token_stream));
                         break;
+                    case GToken::Identifier:
+                        // TODO: Make this mess prettier lol
+                        if(token.value == "void") {
+                            if (token_stream.peek().value == "ready") {
+                                token_stream.next();
+                                if (token_stream.peek().token == GToken::LeftParenthesis) {
+                                    token_stream.next();
+                                    if (token_stream.peek().token == GToken::RightParenthesis) {
+                                        token_stream.next();
+                                        classes.back().has_ready_override = true;
+                                    }
+                                }
+                            };
+                        }
+                        break;
                 }
             }
 
@@ -597,6 +621,7 @@ class Generator
                 generatedFile.classes_indices.pop();
                 auto &_class = classes[class_index];
                 std::string core_functions;
+                std::string ready_function;
 
                 GeneratedFile << "\n#define " << file_id << "_" << _class.generator_line
                               << "_GENERATED_BODY() GDCLASS(" << _class.name << ", "
@@ -605,7 +630,7 @@ class Generator
                               << "_CORE_GENERATED_BODY()\\\npublic :\\\n ";
                 for (auto property : _class.properties)
                 {
-                    generate_property_getset(property, GeneratedFile, core_functions, requirements,
+                    generate_property_getset(property, GeneratedFile, core_functions, requirements, ready_function,
                                              _class);
                 }
 
@@ -730,9 +755,20 @@ class Generator
 
                 GeneratedFile << property_list_function[_class.name];
 
+                std::string has_ready = _class.has_ready_override ? "ready();\\\n" : "";
+
                 GeneratedFile << "\n#define " << file_id << "_" << _class.generator_line
                               << "_CORE_GENERATED_BODY()\\\n"
                               << core_functions;
+
+                if (_class.options.is_node) {
+                    GeneratedFile << "public:\\\n" << file_id << "_" << _class.generator_line <<
+                        "_GENERATED_READY()\n#ifdef DEBUG_ENABLED\n#define "<< file_id << "_" << _class.generator_line
+                        << "_GENERATED_READY()\\\nvoid _ready() override {\\\nif (!::godot::Engine::get_singleton()->is_editor_hint()) {\\\n" <<
+                        ready_function << "}\\\n" << has_ready <<
+                        "}\n#else\n#define "<< file_id << "_" << _class.generator_line << "_GENERATED_READY()\\\nvoid _ready() override {\\\n" <<
+                        ready_function << has_ready << "}\n#endif";
+                }
             }
 
             GeneratedFile.close();
