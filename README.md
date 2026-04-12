@@ -15,13 +15,13 @@
 
 ## Getting Started
 
-Before continuing with the manual steps below, consider using [GD-Gen Easy Setup](https://github.com/pliduino/gd-gen-easy-setup) for a quick and automated project setup.
+Before continuing with the manual steps below, consider using [GD-Gen Easy Setup](https://github.com/zko-jin/gd-gen-easy-setup) for a quick and automated project setup.
 
 1. **Install**
    Clone this repository to your project folder, it uses scons so just compile as normal with "scons".
 
    ```bash
-   git clone https://github.com/pliduino/gd-gen.git
+   git clone https://github.com/zko-jin/gd-gen.git
    ```
 
 2. **Run Generator**
@@ -100,9 +100,3 @@ This project is under active development. Contributions and feedback are welcome
 ## License
 
 Modified MIT License. See [LICENSE](./LICENSE) for more details.
-
----
-
-## Contact
-
-Questions or ideas? Open an issue or contact [pliduino](https://github.com/pliduino).
